@@ -1,9 +1,11 @@
 # thesis-prompts
 
-论文附录「프롬프트 재현 자료 (Prompt Reproduction Appendix)」镜像仓库。
+이 저장소는 박사학위논문 「한·중 노래기반 AI 바이브코딩 언어 교육 플랫폼 설계 및 구축」의 부록으로,
+플랫폼(멜로디클래스)의 각 모듈을 재현하기 위해 사용한 프롬프트를 모아둔 저장소입니다.
 
-本仓库由主仓库 [yuuisohe-ui/sino-song-learn](https://github.com/yuuisohe-ui/sino-song-learn)
-的 `docs/thesis/appendix/prompts/` 目录通过 GitHub Actions 自动同步生成，**只读**。
+프롬프트를 순서대로(00-template → P 시리즈 → T 시리즈 → S 시리즈 → B 시리즈) 적용하면
+플랫폼의 해당 모듈을 재현할 수 있습니다.
 
-请勿在本仓库直接修改文件 —— 任何修改会在下一次同步时被覆盖。
-所有修改请在主仓库的 `docs/thesis/appendix/prompts/` 目录进行。
+원본은 메인 저장소(`sino-song-learn`)의 `docs/thesis/appendix/prompts/` 디렉터리이며,
+변경 사항은 GitHub Actions를 통해 자동으로 이곳에 동기화됩니다.
+이 저장소는 읽기 전용 미러이므로 여기서 직접 수정하지 마세요.
