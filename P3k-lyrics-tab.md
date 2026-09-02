@@ -1,166 +1,174 @@
 # P3k · 가사 탭(Lyrics / Audio / Video) 재현 프롬프트
 
 > **본 프롬프트는 P3 시리즈(P3a–P3q)의 11/17.**
-> **적용 대상**: `src/components/songs/LyricsTab.tsx`, `AudioLyricsTab.tsx`, `VideoLyricsTab.tsx` — 세 가지 가사 뷰(정적 텍스트 · Suno 오디오 하이라이트 · YouTube 하이라이트). 각 뷰는 **독립적인 컴포넌트**이며 상위(P3j)의 `<SongAnalysisDialog>` 의 「가사」 서브탭 라우터에서 song 데이터 형태에 따라 하나가 선택되어 렌더된다.
+> **적용 대상**: `src/components/songs/LyricsTab.tsx`, `AudioLyricsTab.tsx`, `VideoLyricsTab.tsx` — 세 가지 가사 뷰(정적 텍스트 · Suno 오디오 하이라이트 · YouTube 하이라이트). 각 뷰는 **독립적인 컴포넌트**이며 상위(P3j)의 `<SongAnalysisDialog>` 「가사」 서브탭이 song 데이터 형태에 따라 하나를 선택해 렌더한다.
 > **본 프롬프트는 `00-template.md` 의 5-Section 골격을 그대로 따른다.**
+> **개정 이력**: 초판은 낭독을 브라우저 `speechSynthesis` 로 서술했으나, 현재 플랫폼은 **한국어 Typecast · 중국어 讯飞(iFlytek)** 서버 TTS 를 `speakTts` 로 라우팅한다. 본 개정판은 현재 코드를 기준으로 한다.
 
 ---
 
 ## 이론적 근거
 
-1. **OpenAI. (n.d.).** *Prompt engineering — developer messages.* Retrieved July 12, 2026.
-2. **Lovable. (n.d.).** *Prompting best practices.* Retrieved July 12, 2026 — 5개 실천 원칙(Prompt by Component · Speak Atomic · Design with Real Content · Use Prompt Patterns for Layouts · Build with Lovable Cloud in Mind) 채택 근거.
-3. **IEEE. (1998).** IEEE Std 830-1998, §4.3.6, p. 7.
-4. **Cohn, M. (2004).** *User Stories Applied*, Ch. 6, pp. 67–74.
+1. **OpenAI. (n.d.).** *Prompt engineering — developer messages: Identity, Instructions, Examples, Context.* OpenAI Platform Documentation. Retrieved July 12, 2026, from https://platform.openai.com/docs/guides/prompt-engineering
+2. **Lovable. (n.d.).** *Prompting best practices.* Lovable Documentation. Retrieved July 12, 2026, from https://docs.lovable.dev/prompting/prompting-one — 5개 실천 원칙(Prompt by Component · Speak Atomic · Design with Real Content · Use Prompt Patterns for Layouts · Build with Lovable Cloud in Mind) 채택 근거.
+3. **IEEE. (1998).** *IEEE Recommended Practice for Software Requirements Specifications* (IEEE Std 830-1998), §4.3.6 "Verifiable", p. 7. IEEE.
+4. **Cohn, M. (2004).** *User Stories Applied: For Agile Software Development*, Ch. 6, pp. 67–74. Addison-Wesley.
 
 ---
 
 ## ① Identity (신원)
 
-당신은 시니어 프론트엔드 엔지니어 겸 한중 이중언어 교육 UX 라이터입니다. React 18 + Vite 5 + Tailwind v3 + shadcn/ui + Supabase(JS v2) 를 사용해, YouTube IFrame API · Web Audio · `speechSynthesis` · Suno alignedWords · 클라이언트-측 자막 추출을 다뤄 세 가지 가사 렌더러를 만듭니다. 대상은 대한민국 대학의 K-Chinese/K-Korean 교사·학습자입니다.
+당신은 시니어 프론트엔드 엔지니어 겸 한중 이중언어 교육 UX 라이터입니다. React 18 + Vite 5 + Tailwind CSS v3 + shadcn/ui + Supabase(JS v2) 로, YouTube IFrame API · Web Audio · Suno `alignedWords` · 클라이언트-측 자막 추출 · **서버 TTS(Typecast / iFlytek) + 브라우저 음성 fallback** 을 조합해 세 가지 가사 렌더러를 만듭니다. 대상은 대한민국 대학의 K-Chinese/K-Korean 교사·학습자이며, 모든 UI 카피는 순수 한국어입니다.
 
 ## ② Instructions
 
-### 2.1 산출물 (Prompt by Component)
+### 2.1 산출물 (Prompt by Component, Not Page)
 
-- **`src/components/songs/LyricsTab.tsx`** — 오디오/비디오 없는 **정적 가사 뷰**. 폰트 · 문체 번역 · 카드 저장 · 편집을 담당한다.
-- **`src/components/songs/AudioLyricsTab.tsx`** — Suno 로 생성된 **AI 곡 전용**(자체 `audio_url` + `alignedWords`). `SongPlayer` 임베드 + 라인 하이라이트 + 배경 영상 새로고침 + 정렬 복구를 담당한다.
-- **`src/components/songs/VideoLyricsTab.tsx`** — **YouTube 영상 곡 전용**(`video_id`). IFrame 플레이어 + 서버/클라이언트 자막 fallback + fuzzy time-map 매칭을 담당한다.
-- 세 컴포넌트는 **독립**이며 공유 훅을 만들지 않는다. 상위 `<SongAnalysisDialog>`(P3j) 의 「가사」 탭이 `song` 형태로 분기한다:
+- **`src/components/songs/LyricsTab.tsx`** — 오디오/비디오 없는 **정적 가사 뷰**. 표시 모드·순서 · 병음 · 폰트 · 문체 분석 · 카드 저장 · 편집 담당.
+- **`src/components/songs/AudioLyricsTab.tsx`** — Suno 로 생성된 **AI 곡 전용**(자체 `audio_url` + `alignedWords`). `SongPlayer` 임베드 + 라인 하이라이트 + 배경 영상 새로고침 + 정렬 복구 담당.
+- **`src/components/songs/VideoLyricsTab.tsx`** — **YouTube 영상 곡 전용**(`video_id`). IFrame 플레이어 + 서버/클라이언트 자막 fallback + fuzzy time-map 매칭 담당.
+- 세 컴포넌트는 **독립**이며 공유 훅을 만들지 않는다. 상위 `<SongAnalysisDialog>`(P3j) 가 song 형태로 분기한다:
   - `is_ai_generated && audio_url` → `<AudioLyricsTab>`
   - `video_id` → `<VideoLyricsTab>`
   - 그 외 → `<LyricsTab>`
-- 관련 라이브러리:
-  - `src/features/song-player/SongPlayer.tsx` (`embedded` 모드로 사용)
-  - `src/features/song-player/lines.ts` — `parseSunoLines`, `alignLyricsToSuno`
-  - `src/hooks/useYouTubePlayer.ts` — IFrame API wrap
-  - `src/hooks/useClientTranscript.ts` — 서버 `timedEntries` 없을 때 브라우저에서 자막 추출
-  - `src/components/songs/LyricCardDialog.tsx` — 카드 편집기(P3l 문서에서 상세)
-  - `src/components/songs/SongFeatureButtons.tsx` — 2×2 하단 기능 버튼(P3n 참조)
+- 의존 모듈(신규 생성 금지, 그대로 사용):
+  - `src/hooks/useXfTts.ts` — `speakTts(text, lang)` · `stopTts()` · `useXfTts()` · `toTtsLang()`
+  - `src/features/song-player/SongPlayer.tsx` (`embedded` 모드), `src/features/song-player/lines.ts` (`parseSunoLines`, `alignLyricsToSuno`)
+  - `src/hooks/useYouTubePlayer.ts`, `src/hooks/useClientTranscript.ts`
+  - `src/components/songs/LyricCardDialog.tsx`(카드 편집기), `src/components/songs/SongFeatureButtons.tsx`(P3n)
 
 ### 2.2 원자적 UI 규칙 (Speak Atomic)
 
+#### 2.2.0 공통 TTS 라우팅 규칙 (세 컴포넌트 모두 동일)
+
+- 낭독은 **반드시** `speakTts(text, lang)` 로만 호출한다. 컴포넌트에서 `new SpeechSynthesisUtterance` 를 직접 만들지 않는다.
+- `speakTts` 내부 계약:
+  - `toTtsLang(lang)` 이 `"ko" | "korean" | "ko-*"` → `"ko"`, 그 외 전부 → `"zh"` 로 정규화.
+  - `"ko"` → Edge Function **`typecast-tts`**, `"zh"` → Edge Function **`xf-tts`** 호출. 요청 본문 `{ text, lang, speed }`.
+  - 응답 `{ audio_base64 }` → `data:audio/mpeg;base64,…` 로 재생. 모듈-레벨 `Map` 캐시 키 = `` `${lang}:${speed}:${text}` ``, 200건 초과 시 전체 clear.
+  - 함수 실패 또는 `audio_base64` 없음 → **브라우저 음성 fallback**(`lang = ko-KR | zh-CN`, `rate = 0.85`). 응답에 `fallback: true` 가 있으면 콘솔 경고도 남기지 않는다.
+  - 긴 텍스트는 문장 경계(`。．.!?！？\n`) 기준 300자 이하로 분할 후 순차 재생. 새 재생 시작 전 이전 오디오와 `speechSynthesis` 큐를 모두 정지.
+
 #### 2.2.1 `LyricsTab` (정적 뷰)
 
-**Props**: `lyrics: LyricLine[]`, `onSave(lyrics)`, `readOnly?: boolean`, `language?: "chinese"|"korean"`, `songId?`, `songTitle?`, `songArtist?`, `songHskLevel?`.
+**Props**: `lyrics: LyricLine[]`, `onSave(lyrics)`, `readOnly?`, `language?: string`(기본 `"chinese"`), `songId?`, `songTitle?`, `songArtist?`, `songHskLevel?`.
 
-**컨트롤 바**(상단, `flex flex-wrap items-center gap-2 pb-3 border-b`):
+**기본 순서 결정 규칙(중요)**:
+```ts
+const isZhSong = language !== "korean";
+const isTopik  = !!songHskLevel && songHskLevel.toUpperCase().startsWith("TOPIK");
+const koFirst  = isTopik || !isZhSong;         // TOPIK 분석이거나 한국어 곡이면 한국어 우선
+const [order, setOrder] = useState<DisplayOrder>(koFirst ? "ko-zh" : "zh-ko");
+```
 
-1. **언어 모드 그룹**(3-pill segmented, `mode: "zh" | "ko" | "both"`, 기본 `"both"`) — 라벨 `中文 / 한국어 / 둘 다`. 활성 pill 은 `bg-[#243158] text-white`.
-2. **표시 순서 그룹**(2-pill, `order: "zh-ko" | "ko-zh"`, 기본은 `language==="korean"` 이면 `"ko-zh"` 아니면 `"zh-ko"`). `mode !== "both"` 이면 disabled + 40% opacity. 라벨 `中→한 / 한→中`.
-3. **병음 토글** 단일 pill `병음` — `showPinyin: boolean`, 기본 `true`.
-4. **폰트 크기 조절**: `A− {N} A+` (`fontSize` state, MIN=11, MAX=22, 기본 15). 중앙 숫자는 `bg-muted min-w-[28px]` 로 현재 값을 굵게 표시.
-5. **문체 분석 Popover**(`songId` 있을 때만 렌더): 트리거는 `✦ {현재라벨} ▾` pill. Popover 옵션 = `시적 번역 / 직역 / 구어체` 3개 + (선택 상태일 때만) `해제`. `"원문"` 옵션은 존재하지 않는다. 선택 시 `translate-lyrics-style` edge function 호출, 성공 결과는 로컬 `styleCache: Record<StyleType, Record<lineIdx, string>>` 에 저장하고 재선택 시 재호출하지 않는다.
-6. **카드 저장 버튼** `📤 카드로 저장` — `bg-[#3d6cb5] text-white`. 클릭 시 `selectMode=true` 진입, 버튼 라벨은 `✕ 취소` + `animate-pulse bg-red-500`.
-7. **편집 버튼 그룹**(`!readOnly` 시 우측 정렬 `ml-auto`):
-   - 정지 상태: `수정` 아이콘 버튼(`<Pencil>`).
-   - 편집 상태: `취소` + `저장` 두 버튼. `저장` 클릭 시 `onSave(editLyrics)` 호출 후 편집 종료.
+**낭독 언어 결정 규칙(중요)**:
+```ts
+const speakLang = mode === "ko" ? "korean"
+                : mode === "zh" ? "chinese"
+                : order === "ko-zh" ? "korean" : "chinese";
+```
+버튼 클릭 시 우선 언어 텍스트가 비어 있으면 반대 언어 텍스트로 자동 fallback 하고, **실제 사용한 텍스트의 언어**를 `speakText` 에 넘긴다. 양쪽 다 비어 있으면 no-op.
 
-**선택 모드 배너**(`selectMode === true` 일 때만 표시):
-- 컨테이너 `bg-[#3d6cb5]/10 border border-[#3d6cb5]/40 rounded-lg px-4 py-2.5`.
-- 카피 `가사를 클릭해서 선택하세요 · <strong>{n}</strong>줄 선택됨` + `카드 만들기 →`(선택 0줄 disabled) + `취소`.
-- `카드 만들기` 클릭 → 선택된 index 를 오름차순 정렬 후 `<LyricCardDialog>` 를 `selectedLines={ordered.map(i => {kr, zh, py})}` 로 연다.
-- 다이얼로그가 닫히면 selectMode 도 함께 해제한다.
+**컨트롤 바**(`flex flex-wrap items-center gap-2 pb-3 border-b`), 좌→우 순서 고정:
 
-**가사 라인 카드**(순차 렌더, `p-4 rounded-lg border bg-card`):
-- **읽기 모드**: `renderLines(line, mode, order, showPinyin, fontSize)` 로 3중 텍스트 배치.
-  - `zh`: `font-medium text-foreground` 크기 = `fontSize`
-  - `pinyin`: `text-[#3d6cb5]` 크기 = `fontSize - 2`
-  - `ko`: `text-secondary-foreground` 크기 = `fontSize - 1`
-  - 순서 규칙: `mode==="zh"` → zh+py / `mode==="ko"` → ko / `mode==="both" && order==="zh-ko"` → zh+py+ko / `mode==="both" && order==="ko-zh"` → ko+zh+py.
-  - 우측 `<Volume2>` 아이콘 버튼 → `speakText(zhSong ? line.chinese : line.korean, language)` 호출, `speechSynthesis` `lang = "ko-KR"` 또는 `"zh-CN"`, `rate = 0.85`.
-  - 문체 결과가 있으면 `mt-2 pl-3 border-l-2 border-[#3d6cb5]/40 bg-[#243158]/5` 블록에 `{emoji} {styleResult}` 로 표시. 로딩 중은 `<Skeleton h-5 w-3/4>`, 실패 시 `text-destructive` 로 `번역 실패. 다시 시도해 주세요.`.
-- **편집 모드**: 3개 `<Input h-8>` (중국어 / 병음 / 한국어) 로 대체. `editLyrics` 는 진입 시 `JSON.parse(JSON.stringify(lyrics))` 로 딥카피.
-- **선택 모드**: 카드 전체가 클릭 가능(`cursor-pointer`), 선택 시 `ring-2 ring-[#3d6cb5] bg-[#3d6cb5]/5`.
+1. **언어 모드 3-pill** (`mode: "zh" | "ko" | "both"`, 기본 `"both"`) — 라벨 `中文 / 한국어 / 둘 다`. 활성 pill `bg-[#243158] text-white`.
+2. **표시 순서 2-pill** (`order: "zh-ko" | "ko-zh"`) — 라벨 `中→한 / 한→中`. `mode !== "both"` 이면 `disabled` + `opacity-40`.
+3. **병음 토글** 단일 pill `병음` (`showPinyin`, 기본 `true`).
+4. **폰트 크기** `A− {N} A+` — `MIN_FONT=11`, `MAX_FONT=22`, `DEFAULT_FONT=15`. 중앙 숫자 `bg-muted min-w-[28px]` 굵게.
+5. **문체 분석 Popover**(`songId` 있을 때만) — 트리거 `✦ {현재 라벨} ▾`(기본 라벨 `스타일 분석`). 옵션 = `시적 번역`(poetic) / `직역`(literal) / `구어체 번역`(casual), 선택 상태일 때만 `해제` 추가. 선택 시 `translate-lyrics-style` 호출, 응답 `data.translations` 를 `styleCache[style]` 에 저장하고 **재선택 시 재호출 금지**. `"원문"` 옵션은 존재하지 않는다.
+6. **카드 저장 버튼** `📤 카드로 저장`(`bg-[#3d6cb5] text-white`) → `selectMode` 진입 시 라벨 `✕ 취소` + `animate-pulse bg-red-500`.
+7. **편집 버튼 그룹**(`!readOnly`, `ml-auto`): 정지 시 `수정`(Pencil), 편집 중 `취소` + `저장`. `저장` 은 `onSave(editLyrics)` 1회 호출 후 편집 종료.
 
-**문체 이모지 매핑**: `poetic → 🌸`, `literal → 📖`, `casual → 💬` (라인 결과 왼쪽 접두어).
+**선택 모드 배너**(`selectMode === true`): `bg-[#3d6cb5]/10 border border-[#3d6cb5]/40 rounded-lg px-4 py-2.5`, 카피 `가사를 클릭해서 선택하세요 · <strong>{n}</strong>줄 선택됨` + `카드 만들기 →`(0줄 선택 시 disabled) + `취소`. `카드 만들기` 는 선택 인덱스를 오름차순 정렬해 `<LyricCardDialog selectedLines={[{kr, zh, py}]}>` 를 연다. 다이얼로그를 닫으면 `selectMode` 도 해제.
+
+**가사 라인 카드**(`p-4 rounded-lg border bg-card space-y-1`):
+- **읽기 모드** — `renderLines(line, mode, order, showPinyin, fontSize)`:
+  - `zh`: `font-medium text-foreground`, `fontSize`
+  - `pinyin`: `text-[#3d6cb5]`, `fontSize - 2` (`showPinyin` 이고 값이 있을 때만)
+  - `ko`: `text-secondary-foreground`, `fontSize - 1`
+  - 순서: `mode==="zh"` → zh+py / `"ko"` → ko / `"both" && zh-ko` → zh+py+ko / `"both" && ko-zh` → ko+zh+py.
+  - 우측 `<Volume2>` 아이콘 버튼 → 위 낭독 규칙대로 `speakTts`.
+  - 문체 결과가 있으면 `mt-2 pl-3 border-l-2 border-[#3d6cb5]/40 bg-[#243158]/5 rounded-r-md` 블록에 `{emoji} {styleResult}`(`fontSize - 1`). 로딩 중 `<Skeleton className="h-5 w-3/4 mt-2">`, 실패 시 `text-destructive` 로 `번역 실패. 다시 시도해 주세요.`.
+- **편집 모드** — 3개 `<Input className="h-8">`(中文 / Pinyin / 한국어). 진입 시 `editLyrics = JSON.parse(JSON.stringify(lyrics))` 딥카피.
+- **선택 모드** — 카드 전체 클릭 가능(`cursor-pointer hover:bg-muted/50`), 선택 시 `ring-2 ring-[#3d6cb5] bg-[#3d6cb5]/5`.
+
+**문체 이모지**: `poetic → 🌸`, `literal → 📖`, `casual → 💬`.
 
 #### 2.2.2 `AudioLyricsTab` (Suno AI 곡)
 
-**Props**: `audioUrl`, `lyrics`, `alignedWords?: {word,start,end}[]`, `bgVideoList?: string[]|{videoUrl}[]`, `songId?`, `analysisId?`, `language?`, `songTitle?`, `songArtist?`, `songHskLevel?`, `lyricsRaw?`, `isAiGenerated?`, `onNavigateToSong?`.
+**Props**: `audioUrl`, `lyrics`, `alignedWords?: {word,start,end,success?}[]`, `bgVideoList?: string[] | {videoUrl}[]`, `songId?`, `analysisId?`, `language?`, `songTitle?`, `songArtist?`, `songHskLevel?`, `lyricsRaw?`, `isAiGenerated?`, `onNavigateToSong?`.
 
-**레이아웃**: `flex gap-4`, 기본 `flex-col lg:flex-row`, `isExpanded === true` 이면 `flex-col`.
-- **좌측(50 %)** — `<SongPlayer embedded audioUrl bgVideoList onRefreshVideos title subtitle onTimeUpdate onReady stageOverlay />`.
-- **우측(1fr)** — 언어 스위처 + 스크롤 가사 목록 + 하단 정보.
+**레이아웃**: `flex gap-4`, 기본 `flex-col lg:flex-row`, `isExpanded` 이면 `flex-col`. 좌측은 `lg:w-1/2 shrink-0`(확장 시 `w-full`), 우측은 `flex-1`.
 
-**언어 스위처**(`<LangSwitcher>`): `Set<"korean"|"chinese"|"pinyin">` 로 **3개 독립 토글**(단, 마지막 하나는 해제 불가). Pill 형태 `bg-primary text-primary-foreground` 활성 / `bg-muted text-muted-foreground` 비활성. 우측 끝(`ml-auto`) 에 `<Maximize2/Minimize2> 영상 확대 / 영상 축소` 토글.
+**좌측**: `<SongPlayer embedded audioUrl bgVideoList={bgVideos} onRefreshVideos title={songTitle} subtitle={songArtist || "AI 생성 노래"} onTimeUpdate onReady stageOverlay />` → 그 아래 순서로 (a) 타이밍 없음 안내, (b) 정렬 복구 배너, (c) `<SongFeatureButtons>`(songId 있을 때).
+
+**우측**: `LangSwitcher` + 스크롤 라인 리스트.
+
+**언어 스위처**: `Set<LangKey>`(`"korean" | "chinese" | "pinyin"`) 3-토글, 초기값 3개 모두 활성. **마지막 하나는 해제 불가**(`size <= 1` 이면 상태 유지). 라벨 `한국어 / 中文 / 拼音`. 활성 `bg-primary text-primary-foreground border-primary`. 우측 끝(`ml-auto`) `영상 확대 / 영상 축소` 토글(Maximize2/Minimize2).
 
 **시간 정렬**:
-- `sunoLines = parseSunoLines(alignedWords || [])` — Suno 는 라인 단위 항목을 주며 `word` 가 `\n` 로 끝나면 한 줄.
-- `aligned = alignLyricsToSuno(lyrics, sunoLines)` — lyrics.length 와 sunoLines.length 이 다를 수 있으므로 인덱스 정렬.
+- `sunoLines = parseSunoLines(alignedWords || [])` (Suno 항목은 라인 단위, `word` 가 `\n` 로 종료).
+- `aligned = alignLyricsToSuno(lyrics, sunoLines)`.
 - `hasTimed = sunoLines.length > 0`, `lineMismatch = hasTimed && sunoLines.length !== lyrics.length`.
-- 현재 활성 라인은 **이진 탐색**으로 `aligned[i].startS - 0.05 <= currentTime` 만족하는 가장 큰 i.
+- 활성 라인 = **이진 탐색**으로 `aligned[i].startS - 0.05 <= currentTime` 을 만족하는 최대 i.
+- 활성 라인이 바뀌면 리스트 컨테이너를 `scrollTo({top: el.offsetTop - h/2 + el.clientHeight/2, behavior:"smooth"})` 로 중앙 정렬(페이지 스크롤 금지).
 
-**정렬 복구 밴드**(`lineMismatch && isAiGenerated && songId` 일 때만):
-- 카피 `가사({lyrics.length}줄)와 타임스탬프({sunoLines.length}줄)가 일치하지 않습니다.` + `<Wrench> 정렬 복구` 버튼.
-- 버튼 클릭 → `supabase.functions.invoke("sg-repair-aligned", { body: { song_id } })`. 성공 시 toast `정렬 복구 완료` / 실패 시 `복구 실패` `destructive`.
+**타이밍 없음 안내**(`!hasTimed`): `⚠ 가사 타이밍 데이터가 없어 동기화가 제한됩니다.`
 
-**배경 영상 새로고침** (`SongPlayer` 의 `onRefreshVideos` 콜백):
-- `q = [title, artist].filter(Boolean).join(" ") || "nature sky sunlight"`.
-- 1차 `sg-pixabay-videos` 호출 → 결과 없으면 fallback `q="nature sky sunlight people city"`.
-- 결과가 있으면 상태 갱신 + `songs.bg_video_list` UPDATE(fire-and-forget).
-- 재-엔트리 방지 `refreshingBgRef` ref 로 뮤텍스.
+**정렬 복구 배너**(`lineMismatch && isAiGenerated && songId` 세 조건 동시 충족 시에만):
+- 카피 `가사({lyrics.length}줄)와 타임스탬프({sunoLines.length}줄)가 일치하지 않습니다.` + `<Wrench> 정렬 복구` 버튼(진행 중 `<Loader2 animate-spin>` + `disabled`).
+- `supabase.functions.invoke("sg-repair-aligned", { body: { song_id } })`. 성공 toast `정렬 복구 완료 / 페이지를 새로고침해 주세요.`, 실패 toast `복구 실패`(`destructive`).
 
-**stageOverlay** (댄마쿠 자막, 플레이어 하단 `bottom-[12%]` 에 배치):
-- 활성 라인의 `korean/chinese/pinyin` 을 각각 `bg-black/70 text-white` 블록으로 겹쳐 표시(`activeLangs` 에 있는 언어만).
-- `pointer-events-none` 로 클릭 방해 안 함.
+**배경 영상 새로고침**(`onRefreshVideos`):
+- `q = [songTitle, songArtist].filter(Boolean).join(" ").trim() || "nature sky sunlight"`.
+- 1차 `sg-pixabay-videos` → `bgVideoList` 가 비면 `q = "nature sky sunlight people city"` 로 재시도.
+- 결과가 있으면 `setBgVideos(list)` + `songs.bg_video_list` UPDATE(fire-and-forget).
+- `refreshingBgRef` ref 뮤텍스로 재-엔트리 차단, 실패는 `console.warn` 만.
 
-**라인 리스트**:
-- 컨테이너 `overflow-y-auto` + `max-h-[60vh]`(축소) / `max-h-[40vh]`(확장).
-- 각 라인: `formatTime(startS)` (mm:ss) 를 좌측에 monospace 로. 활성 라인은 `bg-primary/10 border-primary/30 shadow-sm scale-[1.01]`.
-- 라인 클릭 → `apiRef.current?.seek(t)`.
-- 라인 내부 primary 언어 결정: `language==="korean" ? ["korean","chinese","pinyin"] : ["chinese","korean","pinyin"]` 순서로 `activeLangs` 에 있는 첫 언어. Primary 는 `text-base font-medium`, 나머지는 `text-xs` (pinyin 은 `text-primary/70`).
-- 라인 우측: `🗣️ 낭독` 버튼 — 곡 언어에 맞춰 TTS. `e.stopPropagation()` 로 seek 방지.
+**stageOverlay(댄마쿠 자막)**: `absolute left-0 right-0 bottom-[12%] pointer-events-none`. 활성 라인의 `korean`(`bg-black/70 text-white text-base`) → `chinese`(`text-sm`) → `pinyin`(`bg-black/65 text-gray-200 text-[12px]`) 순으로 `activeLangs` 에 포함된 것만 표시.
 
-**자동 스크롤**: `currentActiveIndex` 변화 시 라인 요소를 컨테이너 내 중앙으로 부드럽게 스크롤(`container.scrollTo`, `behavior:"smooth"`). 페이지 뷰포트는 움직이지 않는다.
+**라인 리스트**: `overflow-y-auto`, `max-h-[60vh]`(축소) / `max-h-[40vh]`(확장).
+- 좌측 `w-10 text-right font-mono text-[10px]` 에 `formatTime(startS)`(`m:ss`), 타임이 없으면 `{i+1}`.
+- 활성 라인 `bg-primary/10 border-primary/30 shadow-sm scale-[1.01]`, 비활성 `border-transparent hover:bg-muted/50`.
+- 라인 클릭 → 타임이 있을 때만 `apiRef.current?.seek(t)`.
+- 라인 내부 primary 언어 = `language==="korean" ? ["korean","chinese","pinyin"] : ["chinese","korean","pinyin"]` 순서 중 `activeLangs` 에 있는 첫 언어. Primary 는 `text-base font-medium`(활성 시 `text-primary`), 나머지 `text-xs`(pinyin 은 `text-primary/70`).
+- 우측 `🗣️ 낭독` 버튼: `e.stopPropagation()` 후 곡 언어(`language`) 기준 텍스트를 `speakTts`.
 
-**하단 배지**: `hasTimed === false` 이면 `⚠ 가사 타이밍 데이터가 없어 동기화가 제한됩니다.`.
-
-**하단 기능 그리드**: `songId` 있으면 `<SongFeatureButtons>` 렌더(P3n 정의).
-
-#### 2.2.3 `VideoLyricsTab` (YouTube 영상)
+#### 2.2.3 `VideoLyricsTab` (YouTube 곡)
 
 **Props**: `videoId`, `lyrics`, `timedEntries?`, `alignedWords?: {word,startS,endS}[]`, `songId?`, `analysisId?`, `language?`, `lyricsSource?`, `songTitle?`, `songArtist?`, `songHskLevel?`, `lyricsRaw?`, `onNavigateToSong?`.
 
-**레이아웃**: AudioLyricsTab 와 동일한 좌/우 2-Column + `isExpanded` 토글.
+**플레이어**: `const { currentTime, seekTo } = useYouTubePlayer(videoId, \`yt-player-${videoId}\`)`. 컨테이너 `relative aspect-video bg-black rounded-lg overflow-hidden`, 자막 오버레이는 `bottom-[52px] z-10 pointer-events-none`(한국어 `text-lg` · 중국어 `text-base` · 병음 `text-[13px]`).
 
-**좌측**: `<div id="yt-player-{videoId}">` — `useYouTubePlayer(videoId, containerId)` 훅으로 `{ currentTime, seekTo }` 를 얻는다. `aspect-video bg-black rounded-lg overflow-hidden`. 하단 `bottom-[52px]` 위치에 댄마쿠 3-라인 오버레이(pointer-events-none).
+**자막 소스 우선순위**:
+1. `alignedWords` 가 있으면 `alignedTimed = alignedWords.map(w => ({start: w.startS, dur: max(0.1, endS-startS), text: word.replace(/\n+$/,"")}))`.
+2. 아니면 `useClientTranscript(videoId, songId, analysisId, serverTimedEntries, language)`.
+- `useAligned = alignedTimed.length > 0`, `isManualSRT = useAligned || lyricsSource === "custom_timed"`.
+- `isManualSRT` 이면 `buildTimeMap` 을 **호출하지 않고**(`timeMap = []`) 인덱스 1:1 매핑을 쓴다.
 
-**자막 소스 결정**:
-- **Manual SRT 경로**(`isManualSRT`): `alignedWords` 가 있거나 `lyricsSource === "custom_timed"`. `timedEntries` 는 `alignedWords.map(w => ({ start: w.startS, dur: max(0.1, w.endS-w.startS), text: w.word.replace(/\n+$/,"") }))`. 라인-타임 매핑은 **index-1:1**.
-- **Fuzzy 경로**: `useClientTranscript(videoId, songId, analysisId, serverTimedEntries, language)` 로 `timedEntries` 확보 → `buildTimeMap(lyrics, timedEntries)` 로 매핑.
-  - `normalize()`: 공백·`,，。！？、；：""''（）《》-–—…·.!?;:'"()[]` 제거 + toLowerCase.
-  - **그룹화**: `timedEntries` 를 1.5 s 이상 간격이 있을 때 자름.
-  - **매칭**: 각 lyric 라인 대해 모든 그룹 검사, `longer.includes(shorter)` 면 `score = shorter.length / target.length`, 아니면 문자 단위 매칭률 × 0.8. 사용된 그룹은 score × 0.6 감점. threshold **0.3** 이상만 채택.
-  - **비상 fallback**: 매칭된 라인 수가 lyrics.length × 30 % 미만이면 index-비율 균등 분포로 대체.
+**`buildTimeMap(lyrics, timed)` 규칙**(fuzzy 경로 전용):
+- 자막 항목을 1.5초 초과 공백 기준으로 그룹핑(`{start, text}`).
+- 각 가사 줄은 `normalize()`(공백·한중 문장부호 제거 + 소문자화)된 `line.chinese` 를 기준으로 최고 점수 그룹 선택. 포함 관계면 `shorter.length / target.length`, 아니면 문자 일치율 × 0.8. 이미 쓰인 그룹은 × 0.6 페널티.
+- 최고 점수 ≥ 0.3 이면 해당 그룹 `start`, 아니면 `-1`.
+- 매칭 수가 `lyrics.length * 0.3` 미만이면 **전체를 인덱스 비율 fallback**(`timed[round(ratio*(n-1))].start`)으로 대체한다.
 
-**동기화 상태 라벨**(가사 리스트 상단):
-- `!hasTimed` → `⚠ 이 영상에는 자막 타이밍 데이터가 없어 동기화가 불가합니다.`
-- `isManualSRT` → `⏱ {min(lyrics.length, entries.length)}/{entries.length} 구간 매핑`
-- 그 외: syncRatio = matched/lyrics.length, `✅`(≥0.7) / `⚠`(≥0.3) / `❌`(<0.3) + `추정 매핑 {n}/{lyrics.length}줄`.
-- fetching 중이면 `<Loader2 animate-spin> 자막 데이터 가져오는 중...`.
+**활성 라인**: `isManualSRT` 이면 `timedEntries[i].start <= currentTime` 인 최대 i, 아니면 `timeMap[i] >= 0 && <= currentTime` 인 최대 i. 활성 변경 시 `isExpanded` 면 컨테이너 내부만 `scrollTo`, 아니면 `el.scrollIntoView({block:"center"})`.
 
-**활성 라인 계산**:
-- Manual: 선형 스캔 `timedEntries[i].start <= currentTime` 중 마지막 i.
-- Fuzzy: 선형 스캔 `timeMap[i] >= 0 && timeMap[i] <= currentTime` 중 마지막 i.
+**동기화 상태 라벨**(플레이어 하단, 셋 중 하나만):
+- 자막 로딩 중: `<Loader2 animate-spin> 자막 데이터 가져오는 중...`
+- 타이밍 없음: `⚠ 이 영상에는 자막 타이밍 데이터가 없어 동기화가 불가합니다.`
+- 그 외: manual → `⏱ {min(lyrics, entries)}/{entries} 구간 매핑`, fuzzy → `{icon} 추정 매핑 {m}/{n}줄`(비율 ≥0.7 `✅`, ≥0.3 `⚠`, 그 외 `❌`).
 
-**자동 스크롤**:
-- `isExpanded` → 컨테이너 내부만 스크롤(`container.scrollTo`).
-- 축소 상태 → `el.scrollIntoView({block:"center"})`.
+**리스트**: `AudioLyricsTab` 과 동일한 스타일·언어 스위처·확대 토글. manual 경로는 `formatTime(entry.start)`(`w-10 font-mono`), fuzzy 경로는 `{i+1}`(`w-5`). 낭독 버튼은 `speakTts(line.chinese, "zh")`.
 
-**라인 카드**: AudioLyricsTab 와 동일한 primary/secondary 렌더 규칙. 좌측 시간 라벨: manual 은 `formatTime(entry.start)`, fuzzy 는 `i+1` 인덱스만. 클릭 시 `seekTo(entry.start)` 또는 `seekTo(timeMap[i])`. `🗣️ 낭독` 은 항상 **중국어**(`speakChinese`, `zh-CN`) — 이 컴포넌트는 K-Chinese 곡 전용이므로.
+### 2.3 강제 제약
 
-**하단 기능 그리드**: `songId` 있으면 `<SongFeatureButtons>` 렌더.
-
-### 2.3 강제 제약 (Speak Atomic + Design with Real Content)
-
-- 세 컴포넌트는 **공유 훅을 만들지 않는다**. 상태는 각자 관리한다.
-- 컨트롤 활성 색은 프로젝트 dark-navy 팔레트에서 `#243158`(LyricsTab pill), `#3d6cb5`(강조), `bg-primary`(Audio/Video pill) 로 통일. 하드코드된 6자리 hex 는 위 3개만 예외적으로 허용하며 나머지는 semantic token(`bg-primary`, `text-muted-foreground`, `border-border`, `bg-card`, `bg-muted`).
-- `rg -n "bg-\[#|text-white|bg-black" src/components/songs/{LyricsTab,AudioLyricsTab,VideoLyricsTab}.tsx` 결과는 위에서 허용한 오버레이 자막 배경(`bg-black/70`, `bg-black/65`)과 카드 저장 pill 색 3개(`#243158`, `#3d6cb5`, `#243158`) 이외에 새 항목이 **추가되어서는 안 된다**.
-- `readOnly === true` 이면 편집 버튼과 저장 액션은 숨긴다. TTS · 문체 분석 · 카드 저장 · seek 는 유지.
-- 모든 edge function 호출은 `supabase.functions.invoke(...)` 로 하고, 실패 시 toast 는 반드시 한국어 카피를 사용한다.
-- lorem ipsum · placeholder 텍스트 사용 금지. 모든 사용자-facing 문자열은 아래 3.1 표의 확정 카피만 사용한다.
-- `<h1>` 은 만들지 않는다(모달 내부이므로).
+- semantic token 우선. 예외로 허용하는 하드코드는 브랜드 hex `#243158`, `#3d6cb5`, `#2e3d6b` 와 자막 오버레이 전용 `bg-black/70` · `bg-black/65` · `text-white` · `text-gray-200` 뿐이다. 그 외 `bg-[#…]` / `text-white` / `bg-black` 금지.
+- 낭독은 `speakTts` 단일 경로. 컴포넌트에서 TTS Edge Function 을 직접 `invoke` 하지 않는다.
+- `<h1>` 은 페이지당 하나(가사 탭은 다이얼로그 내부이므로 `<h1>` 을 만들지 않는다).
+- 카피는 순수 한국어(lorem ipsum 금지). 언어 pill 라벨(`中文`, `拼音`)은 학습 대상 표기이므로 예외.
+- 세 컴포넌트는 자체적으로 song 형태 분기를 하지 않는다(분기는 P3j 책임).
+- 모든 Edge Function 호출은 실패해도 UI 를 잠그지 않는다(배너·toast·fallback 중 하나로 처리).
 
 ## ③ Examples
 
@@ -168,33 +176,30 @@
 
 | 위치 | 카피 |
 |---|---|
-| LyricsTab 언어 모드 | `中文 / 한국어 / 둘 다` |
-| LyricsTab 순서 | `中→한 / 한→中` |
-| LyricsTab 병음 토글 | `병음` |
-| LyricsTab 폰트 | `A− {N} A+` |
-| LyricsTab 문체 트리거 | `✦ 스타일 분석 ▾` (선택 시 라벨 교체) |
-| LyricsTab 문체 옵션 | `시적 번역 / 직역 / 구어체 / 해제` |
-| LyricsTab 문체 이모지 | `🌸 / 📖 / 💬` |
-| LyricsTab 문체 실패 | `번역 실패. 다시 시도해 주세요.` |
-| LyricsTab 편집 진입 | `수정` |
-| LyricsTab 편집 저장/취소 | `저장 / 취소` |
-| LyricsTab 카드 저장 진입 | `📤 카드로 저장` |
-| LyricsTab 선택 취소 | `✕ 취소` |
-| LyricsTab 선택 배너 | `가사를 클릭해서 선택하세요 · {n}줄 선택됨` |
-| LyricsTab 카드 생성 CTA | `카드 만들기 →` |
-| Audio/Video 언어 스위처 | `한국어 / 中文 / 拼音` |
-| Audio/Video 확대 토글 | `영상 확대 / 영상 축소` |
-| Audio/Video 낭독 | `🗣️ 낭독` |
-| Audio 정보 부제(artist 없을 때) | `AI 생성 노래` |
+| 언어 모드 pill | `中文` / `한국어` / `둘 다` |
+| 표시 순서 pill | `中→한` / `한→中` |
+| 병음 토글 | `병음` |
+| 폰트 조절 | `A−` / `{n}` / `A+` |
+| 문체 트리거(기본) | `✦ 스타일 분석 ▾` |
+| 문체 옵션 | `시적 번역` / `직역` / `구어체 번역` / `해제` |
+| 문체 실패 | `번역 실패. 다시 시도해 주세요.` |
+| 카드 저장 진입/취소 | `📤 카드로 저장` / `✕ 취소` |
+| 선택 배너 | `가사를 클릭해서 선택하세요 · {n}줄 선택됨` |
+| 카드 만들기 | `카드 만들기 →` |
+| 편집 버튼 | `수정` / `취소` / `저장` |
+| Audio/Video 언어 pill | `한국어` / `中文` / `拼音` |
+| 확대 토글 | `영상 확대` / `영상 축소` |
+| 낭독 버튼 | `🗣️ 낭독` |
 | Audio 타이밍 없음 | `⚠ 가사 타이밍 데이터가 없어 동기화가 제한됩니다.` |
 | Audio 정렬 불일치 | `가사({a}줄)와 타임스탬프({b}줄)가 일치하지 않습니다.` |
 | Audio 정렬 복구 버튼 | `정렬 복구` |
-| Audio 정렬 성공 toast | `정렬 복구 완료 / 페이지를 새로고침해 주세요.` |
+| Audio 정렬 성공 toast | `정렬 복구 완료` / `페이지를 새로고침해 주세요.` |
 | Audio 정렬 실패 toast | `복구 실패` |
 | Video 자막 로딩 | `자막 데이터 가져오는 중...` |
 | Video 타이밍 없음 | `⚠ 이 영상에는 자막 타이밍 데이터가 없어 동기화가 불가합니다.` |
-| Video manual 매핑 라벨 | `⏱ {m}/{n} 구간 매핑` |
-| Video fuzzy 매핑 라벨 | `{icon} 추정 매핑 {m}/{n}줄` (icon = `✅`/`⚠`/`❌`) |
+| Video manual 매핑 | `⏱ {m}/{n} 구간 매핑` |
+| Video fuzzy 매핑 | `{icon} 추정 매핑 {m}/{n}줄` (`✅`/`⚠`/`❌`) |
+| Audio 플레이어 부제 기본값 | `AI 생성 노래` |
 
 ### 3.2 컴포넌트 트리 (Use Prompt Patterns for Layouts)
 
@@ -202,87 +207,101 @@
 <SongAnalysisDialog>  ── 「가사」 서브탭 진입 시 song 분기 ──▶
    ├─ is_ai_generated && audio_url   → <AudioLyricsTab>
    │      ├─ <SongPlayer embedded stageOverlay={<Danmaku>} onRefreshVideos />
-   │      ├─ 정렬 복구 배너 (조건부)
+   │      ├─ 타이밍 없음 안내 (조건부)
+   │      ├─ 정렬 복구 배너 (lineMismatch && isAiGenerated && songId)
    │      ├─ <SongFeatureButtons>            ── P3n
-   │      └─ 가사 리스트 (binary-search 활성 라인)
+   │      └─ LangSwitcher + 가사 리스트 (binary-search 활성 라인, seek)
    │
    ├─ else if video_id                → <VideoLyricsTab>
    │      ├─ <div id="yt-player-{videoId}"/>  ── useYouTubePlayer
    │      │   └─ Danmaku overlay bottom-[52px]
-   │      ├─ 동기화 상태 라벨
+   │      ├─ 동기화 상태 라벨 (로딩 / 없음 / manual / fuzzy)
    │      ├─ <SongFeatureButtons>            ── P3n
-   │      └─ 가사 리스트 (manual index 또는 fuzzy buildTimeMap)
+   │      └─ LangSwitcher + 가사 리스트 (manual index 또는 fuzzy buildTimeMap)
    │
    └─ else                            → <LyricsTab>
           ├─ 컨트롤 바 (mode + order + 병음 + 폰트 + 문체 + 카드저장 + 편집)
           ├─ 선택 모드 배너 (조건부)
           └─ 가사 카드 리스트 (읽기 / 편집 / 선택 상태)
-                └─ 카드저장 → <LyricCardDialog>   ── P3l
+                └─ 카드저장 → <LyricCardDialog>
 ```
 
 **상태 스키마**:
 ```ts
-// LyricsTab 내부
-type DisplayMode = "zh" | "ko" | "both";
+// LyricsTab
+type DisplayMode  = "zh" | "ko" | "both";
 type DisplayOrder = "zh-ko" | "ko-zh";
-type StyleType = "none" | "poetic" | "literal" | "casual";
+type StyleType    = "none" | "poetic" | "literal" | "casual";
+const MIN_FONT = 11, MAX_FONT = 22, DEFAULT_FONT = 15;
 
-// Audio/Video 내부
+// Audio / Video 공통
 type LangKey = "korean" | "chinese" | "pinyin";
 const [activeLangs, setActiveLangs] = useState<Set<LangKey>>(new Set(["korean","chinese","pinyin"]));
-const [isExpanded, setIsExpanded] = useState(false);
+const [isExpanded, setIsExpanded]   = useState(false);
 ```
-
-**폰트 상수**: `MIN_FONT=11`, `MAX_FONT=22`, `DEFAULT_FONT=15`.
 
 ## ④ Context (배경)
 
 ### 4.1 프로젝트 맥락
-가사 뷰는 곡 학습의 근간이다. 세 렌더러는 각각 (a) 텍스트만 있는 곡(신곡·낭독용), (b) Suno 로 생성해 라인-레벨 정렬을 이미 확보한 AI 곡, (c) YouTube 원본 자막에 의존하는 실제 곡 — 세 콘텐츠 원천을 통일된 UX 언어(활성 라인 하이라이트 · TTS · 언어 스위처)로 감싼다. 상위 P3j 다이얼로그가 song 형태에 따라 자동 분기하므로 각 컴포넌트는 자체적으로 조건 분기를 하지 않는다.
+가사 뷰는 곡 학습의 근간이다. 세 렌더러는 (a) 텍스트만 있는 곡, (b) Suno 로 생성해 라인-레벨 정렬을 확보한 AI 곡, (c) YouTube 원본 자막에 의존하는 실제 곡 — 세 콘텐츠 원천을 하나의 UX 언어(활성 라인 하이라이트 · 언어 스위처 · 낭독)로 감싼다. 학습자가 TOPIK(한→중) 과 HSK(중→한) 어느 방향으로 들어와도 첫 화면의 언어 순서와 낭독 언어가 학습 방향과 일치해야 한다는 것이 P3k 의 핵심 요구다.
 
 ### 4.2 Lovable Cloud 후경 (Build with Lovable Cloud in Mind)
 
-- Edge Function `translate-lyrics-style`: OpenAI 로 3-스타일 번역. LyricsTab 내부 `styleCache` 는 프로세스-내 캐시(모달을 다시 열면 재호출). 실패 시 toast/텍스트로 명시.
-- Edge Function `sg-pixabay-videos`: Pixabay 검색. 결과가 비면 일반 fallback 쿼리 재시도.
-- Edge Function `sg-repair-aligned`: Suno alignedWords 재정렬. AI 곡 전용.
-- `useClientTranscript` 훅: 서버 `timedEntries` 미제공 시 브라우저에서 자막 fetch, `songId + analysisId` 기준 캐시.
-- `useYouTubePlayer` 훅: IFrame API 로 currentTime 폴링 + seekTo 노출.
-- 4-상태 렌더링: 로딩(`<Loader2 animate-spin>`) / 빈(`⚠` 배너) / 에러(toast + destructive 텍스트) / 성공(활성 하이라이트).
+호출하는 Edge Function:
+
+| 함수 | 호출 지점 | 실패 처리 |
+|---|---|---|
+| `typecast-tts` | `speakTts`(lang=ko) | 브라우저 음성 fallback, `fallback:true` 면 무로그 |
+| `xf-tts` | `speakTts`(lang=zh) | 동일 |
+| `translate-lyrics-style` | LyricsTab 문체 선택 | `styleError=true` → 라인별 실패 문구 |
+| `sg-pixabay-videos` | AudioLyricsTab 배경 새로고침 | 일반 쿼리 재시도 → `console.warn` |
+| `sg-repair-aligned` | AudioLyricsTab 정렬 복구 | `destructive` toast |
+
+- `useClientTranscript`: 서버 `timedEntries` 가 없을 때 브라우저에서 자막을 가져오고 `songId + analysisId` 기준으로 캐시.
+- `useYouTubePlayer`: IFrame API 로 `currentTime` 폴링 + `seekTo` 노출.
+- 4-상태 렌더링: 로딩(`<Loader2 animate-spin>` / `<Skeleton>`) · 빈(`⚠` 안내 문구) · 에러(toast + `text-destructive`) · 성공(활성 하이라이트).
 
 ### 4.3 데이터 계약
 
 ```ts
 export type LyricLine = { chinese: string; pinyin: string; korean: string };
 export type TimedEntry = { start: number; dur: number; text: string };
-export type AlignedWordSuno = { word: string; start: number; end: number; success?: boolean };
+export type AlignedWordSuno  = { word: string; start: number; end: number; success?: boolean };
 export type AlignedWordVideo = { word: string; startS: number; endS: number };
 
-// songs 컬럼 (P3h 스키마 참조)
-//   audio_url        text
-//   aligned_words    jsonb           -- Suno 결과 저장
-//   bg_video_list    jsonb           -- Pixabay 후보 배열
-//   lyrics_source    text            -- "custom_timed" 이면 index-1:1 매핑
+// songs 컬럼 (스키마 원본은 P3h / B1 참조)
+//   audio_url      text
+//   aligned_words  jsonb   -- Suno 결과
+//   bg_video_list  jsonb   -- Pixabay 후보 배열 (string[] 또는 {videoUrl}[])
+//   lyrics_source  text    -- "custom_timed" 이면 index 1:1 매핑
+//   language       text    -- "chinese" | "korean"
+//   hsk_level      text    -- "TOPIK …" 로 시작하면 한국어 우선 표시
 ```
 
-이 컴포넌트들은 DDL/RLS 를 직접 생성하지 않는다. 필요한 스키마는 P3h(songs) · P4a(edge functions) 에서 이미 정의된다.
+본 컴포넌트들은 DDL/RLS 를 생성하지 않는다. 관련 스키마·GRANT·정책은 P3h(songs) 및 B1/B2(edge functions) 에서 정의된다.
 
 ## ⑤ Acceptance & Output (IEEE 830 §4.3.6)
 
 ### 5.1 Acceptance Criteria
 
-- **활성 라인 지연** ≤ **80 ms**(재생 currentTime 갱신 → 하이라이트 클래스 적용).
-- **AudioLyricsTab 이진탐색** 은 O(log n): `aligned.length = 1000` 기준 활성 라인 결정 ≤ **1 ms**.
-- **문체 캐시**: 동일 style 재선택 시 `translate-lyrics-style` 호출 수 = **0**. 최초 선택 시 = 1.
-- **LyricsTab 편집 저장**: `onSave(editLyrics)` 정확히 1 회 호출 + `setEditing(false)` 후 카드가 읽기 모드로 복귀.
-- **VideoLyricsTab fuzzy 매핑**: 매칭 비율 < 30 % 이면 100 % 라인이 index-비율 fallback 시간을 가진다(즉 `timeMap.every(t => t>=0)`).
-- **Manual SRT 경로**: `alignedWords` 가 있거나 `lyricsSource === "custom_timed"` 일 때 `buildTimeMap` 을 호출하지 않는다(호출 = 0회).
-- **정렬 복구**: `lineMismatch === true && isAiGenerated === true && songId` 세 조건 모두일 때만 배너 렌더. `sg-repair-aligned` 호출은 클릭당 1 회, `refreshingBgRef` 를 이용한 뮤텍스로 재-엔트리 = 0.
-- **자동 스크롤**: `isExpanded === true` 인 VideoLyricsTab 에서는 페이지 `window.scrollY` 변화 = 0(내부 컨테이너만 스크롤).
-- **언어 스위처 하한**: `activeLangs.size` 는 항상 ≥ 1. 마지막 남은 언어 pill 클릭 시 무시.
-- **카드 저장**: `selectedIdx.size === 0` 이면 `카드 만들기` 버튼 disabled 이며 클릭 = no-op.
-- **폰트 크기 경계**: `fontSize ∈ [11, 22]` 로 클램프. 경계 넘어서는 클릭은 상태 변화 = 0.
-- **하드코드 색상 검사**: `rg -n "bg-\[#(?!243158|3d6cb5)|text-white(?![^\s])" src/components/songs/{LyricsTab,AudioLyricsTab,VideoLyricsTab}.tsx` 결과 = **0**(위 2 hex + 자막 오버레이용 `bg-black/70`, `bg-black/65` 제외).
-- **한국어 카피 커버리지**: 3.1 표의 모든 카피가 각 컴포넌트에서 최소 1회 등장.
+- **기본 순서**: `songHskLevel` 이 `TOPIK` 으로 시작하거나 `language === "korean"` 인 fixture 에서 초기 `order === "ko-zh"` (테스트 4 케이스: TOPIK+zh곡 / TOPIK+ko곡 / HSK+zh곡 / HSK+ko곡 → 앞 3개 `ko-zh`, HSK+zh곡만 `zh-ko`).
+- **낭독 언어 분기**: `mode` × `order` 6 조합 전부에서 `speakTts` 인자 언어가 규칙과 일치(`ko`→ko, `zh`→zh, `both+ko-zh`→ko, `both+zh-ko`→zh). 우선 언어 텍스트가 빈 문자열인 fixture 에서 반대 언어로 1회 fallback, 양쪽 공백이면 호출 횟수 = **0**.
+- **TTS 라우팅**: `lang="korean"` 호출 시 `typecast-tts` 1회 · `xf-tts` 0회, `lang="chinese"` 호출 시 그 반대. 동일 `(lang, speed, text)` 재호출 시 함수 호출 = **0**(캐시 적중).
+- **활성 라인 지연** ≤ **80 ms**(currentTime 갱신 → 하이라이트 클래스 적용).
+- **이진 탐색**: `aligned.length = 1000` 에서 활성 라인 결정 ≤ **1 ms**, 비교 횟수 ≤ **10**.
+- **문체 캐시**: 동일 style 재선택 시 `translate-lyrics-style` 호출 = **0**, 최초 선택 = 1.
+- **편집 저장**: `onSave(editLyrics)` 정확히 1회 + 저장 후 읽기 모드 복귀. 편집 취소 시 원본 `lyrics` 불변(딥카피 검증).
+- **fuzzy 매핑**: 매칭 비율 < 30 % 이면 `timeMap.every(t => t >= 0)` 이 참(인덱스 비율 fallback 100 % 적용).
+- **manual 경로**: `alignedWords` 가 있거나 `lyricsSource === "custom_timed"` 일 때 `buildTimeMap` 호출 = **0**.
+- **정렬 복구**: `lineMismatch && isAiGenerated && songId` 세 조건 동시 충족 시에만 배너 렌더, `sg-repair-aligned` 호출은 클릭당 1회, `repairing` 중 재클릭 = 0회.
+- **배경 새로고침 뮤텍스**: `onRefreshVideos` 를 100 ms 간격 5회 연속 호출해도 진행 중 재-엔트리 = **0**.
+- **자동 스크롤**: `isExpanded === true` 인 VideoLyricsTab 에서 페이지 `window.scrollY` 변화 = **0**.
+- **언어 스위처 하한**: `activeLangs.size ≥ 1` 항상 유지. 마지막 pill 클릭 시 상태 변화 = 0.
+- **카드 저장**: `selectedIdx.size === 0` 이면 `카드 만들기 →` disabled, 클릭 = no-op. 다이얼로그 닫힘 시 `selectMode === false`.
+- **폰트 경계**: `fontSize ∈ [11, 22]` 클램프, 경계 초과 클릭 시 상태 변화 = 0.
+- **하드코드 색상 검사**: `rg -n "bg-\[#(?!243158|3d6cb5|2e3d6b)" src/components/songs/LyricsTab.tsx src/components/songs/AudioLyricsTab.tsx src/components/songs/VideoLyricsTab.tsx` = **0**.
+- **TTS 직접 호출 금지 검사**: `rg -n "SpeechSynthesisUtterance|functions.invoke\(\"(xf|typecast)-tts" src/components/songs/{LyricsTab,AudioLyricsTab,VideoLyricsTab}.tsx` = **0**.
+- **한국어 카피 커버리지**: 3.1 표의 모든 카피가 해당 컴포넌트에서 최소 1회 등장.
 
 ### 5.2 Output Format
 
