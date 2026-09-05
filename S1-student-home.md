@@ -4,7 +4,7 @@
 >
 > **범위**: `/student-home` 페이지 전체 = 대시보드 셸(그리드/편집 모드/드로어) + 학생 카탈로그 11종 완전 스펙 + `DashboardCalendar` 학생 시점 + 학생용 Hero·PlatformFlow·SongRecommendation variant + 이벤트 버스.
 >
-> **범위 밖**: 공용(clock/notes/image/youtube/link_card/quote/pomodoro/dday/sticky_note/divider) · 장식(aurora/floating_notes/space/ripple/music_visualizer/art_text/wave_deco) · 재미(fortune/tarot/fortune_cookie/gacha/weather/motivation) 위젯의 렌더 세부 — 이들은 role-agnostic 하므로 **T1a / T1b 프롬프트를 그대로 재사용**한다. 본 문서는 카탈로그 항목 등록·표시 조건만 지시한다.
+> **범위 밖**: 공용(clock/notes/youtube/link_card/quote/pomodoro/dday/sticky_note/divider) · 장식(aurora/floating_notes/space/ripple/music_visualizer/art_text/wave_deco) · 재미(fortune/tarot/fortune_cookie/gacha/weather/motivation) 위젯의 렌더 세부 — 이들은 role-agnostic 하므로 **T1a / T1b 프롬프트를 그대로 재사용**한다. 본 문서는 카탈로그 항목 등록·표시 조건만 지시한다.
 
 ---
 
@@ -53,7 +53,7 @@
 export type ModuleSize = "S" | "M" | "L";
 export type ModuleType =
   | "hero_insight" | "platform_flow" | "calendar" | "song_recommendation"
-  | "clock" | "notes" | "image" | "youtube" | "link_card" | "quote"
+  | "clock" | "notes" | "youtube" | "link_card" | "quote"
   | "pomodoro" | "dday" | "wave_deco" | "divider" | "sticky_note"
   | "aurora_deco" | "floating_notes" | "space_deco" | "ripple_interactive"
   | "music_visualizer" | "art_text"
@@ -173,13 +173,12 @@ Props: `variant?: "teacher"|"student"`, `storageKey?`, `defaultLayout?`, `title?
 
 학생 홈에 노출되는 항목만 열거(교사 전용은 학생 드로어에서 숨김이므로 값은 존재해도 무방):
 
-**common (12)** — 세부는 T1a 참조. 이 문서에서는 등록만 지시한다.
+**common (11)** — 세부는 T1a 참조. 이 문서에서는 등록만 지시한다.
 
 | type | 라벨 | 설명 | 아이콘 | defaultSize |
 |---|---|---|---|---|
 | clock | 시계 | 디지털 시계 | AlarmClock | S |
 | notes | 메모 | 간단 메모 | FileText | S |
-| image | 이미지 | 업로드 또는 Pixabay | Image | S |
 | youtube | 영상 임베드 | YouTube 임베드 | Youtube | M |
 | link_card | 링크 카드 | 외부 링크 즐겨찾기 | Link2 | S |
 | quote | 명언 카드 | 랜덤 명언 | Quote | S |
@@ -248,9 +247,9 @@ Helper: `getCatalogItem(type) = DASHBOARD_CATALOG.find(c => c.type === type)`.
 - **탈퇴 다이얼로그** (`AlertDialog`):
   - 제목: "이 반에서 나가시겠습니까?".
   - 설명: "`{name}` 에서 나갑니다. 언제든 다시 참여할 수 있어요.".
-  - 확인 클릭 → `supabase.from("course_members").delete().eq("course_id", …).eq("user_id", uid)`.
+  - 확인 클릭 → `supabase.rpc("leave_course", { _course_id })` (SECURITY DEFINER RPC — 소프트 삭제 후 휴지통에서 7일간 복원 가능).
     - 실패 → `toast.error("나가기 실패: " + error.message)`.
-    - 성공 → `toast.success("반에서 나갔어요.")`, 로컬 rows 필터 제거, `window.dispatchEvent(new Event("student-courses:refresh"))`.
+    - 성공 → `toast.success("반에서 나갔어요. 휴지통에서 7일간 복원할 수 있어요.")`, 로컬 rows 필터 제거, `window.dispatchEvent(new Event("student-courses:refresh"))`.
 - **실시간 갱신**:
   - `supabase.channel("student-courses-<uid>").on("postgres_changes", { event: "UPDATE", schema: "public", table: "courses" }, refetch)`.
   - `window.addEventListener("student-courses:refresh", refetch)` + `"course:updated"` 도 리슨. 언마운트 시 모두 해제.
@@ -580,7 +579,7 @@ Helper: `getCatalogItem(type) = DASHBOARD_CATALOG.find(c => c.type === type)`.
 
 #### 3.11.3 `SongRecommendationModule` (M)
 
-T1 참조. 학생 홈에서도 그대로 사용 — GPT 로 매일 자정 갱신되는 랜덤 노래 추천 카드. 학생/교사 차별 로직 없음.
+T1 참조. 학생 홈에서도 동일 컴포넌트. 마운트 시 `songs` 에서 무작위 1곡을 뽑고, 「다른 곡」 클릭 시 즉시 다시 뽑는다 — 날짜/자정 기준 캐시는 없으며 카드의 「매일 업데이트」 문구는 정적 라벨이다. 교학 팁은 `generate-teaching-tip` edge function 호출. 학생/교사 차별 로직 없음.
 
 ---
 
@@ -588,6 +587,7 @@ T1 참조. 학생 홈에서도 그대로 사용 — GPT 로 매일 자정 갱신
 
 ### 4.1 사용 RPC
 
+- `leave_course(_course_id uuid)` → 반 탈퇴. `SECURITY DEFINER`, 소프트 삭제(휴지통 7일 복원).
 - `get_my_joined_courses()` → `{ id uuid, name text, level text, deleted_at timestamptz }[]`. `SECURITY DEFINER`, 자기 자신 소속 반만 반환.
 
 ### 4.2 사용 테이블 (전부 RLS 보호)
@@ -595,7 +595,7 @@ T1 참조. 학생 홈에서도 그대로 사용 — GPT 로 매일 자정 갱신
 | 테이블 | 학생 접근 | 용도 |
 |---|---|---|
 | `courses` | SELECT (본인 소속·공개) | 이름/레벨/`class_time`/`start_date` 조회 |
-| `course_members` | SELECT self, INSERT self, DELETE self | 공개 반 가입·탈퇴 |
+| `course_members` | SELECT self, INSERT self / 탈퇴는 `leave_course` RPC | 공개 반 가입·탈퇴 |
 | `course_student_profiles` | SELECT (본인 `member_user_id`) | 참여 반 조회 |
 | `course_calendar_items` | SELECT (본인 반), INSERT/UPDATE/DELETE self only | 캘린더 이벤트 |
 | `custom_event_types` | SELECT/INSERT self | 캘린더 타입 팔레트 |
@@ -625,17 +625,16 @@ T1 참조. 학생 홈에서도 그대로 사용 — GPT 로 매일 자정 갱신
 
 ## 5. Non-Goals (S1 에서 다루지 않음)
 
-- 공용 위젯 12종의 렌더 세부 → **T1a 재사용** (본 문서는 카탈로그 등록만).
+- 공용 위젯 11종의 렌더 세부 → **T1a 재사용** (본 문서는 카탈로그 등록만).
 - 장식 7종 + 재미 6종의 세부 → **T1b 재사용**.
 - 교사 전용 위젯 8종(`ai_draft, stats, my_classes, recent_activity, student_messages, notices, hero_insight 편집 관리자 뷰, platform_flow 교사 variant`) — 학생 편집 패널에서 완전 비노출.
 - 레거시 위젯 `particle_deco` — 카탈로그·기본 레이아웃 어디에도 노출 금지.
-- 코스 상세 페이지 `/courses/:id` 의 학생 뷰 (별도 문서 S2).
-- 온보딩 · 반 가입 초대 · 프로필 초기 세팅 (별도 문서 S3).
-- 공용 노래 아카이브 페이지 (`/songs`) (별도 문서 S4).
-- 학생 설정 (`/settings` 학생 분기) (별도 문서 S5).
-- 학생 사용 가이드 (`/guide` 학생 분기) (별도 문서 S6).
-- 학생 휴지통 (`/trash` 학생 분기) (별도 문서 S7).
-- 홈 & 인증 흐름 (별도 문서 S8).
+- 코스 상세 페이지 `/courses/:id` 의 학생 뷰 → **S4**.
+- 학생 인증 · 초대 링크 · 온보딩(프로필 초기 세팅) → **S2**.
+- 공용 노래 아카이브 페이지 `/songs` → **P3 계열(P3a~P3q)**.
+- 학생 설정 · 학생 휴지통 → **S6**.
+- 학생 사용 가이드 `/student-guide` → **S7**.
+- 공개 홈 페이지 · 인증 화면 → **P1 / P2**.
 
 ---
 
@@ -648,11 +647,11 @@ T1 참조. 학생 홈에서도 그대로 사용 — GPT 로 매일 자정 갱신
 5. 학생 편집 드로어에는 **🧩 공용 / ✨ 장식 & 애니메이션 / 🔮 재미 & 운세 / 🎓 학생 전용** 4개 섹션만 노출되고, 「👩‍🏫 교사 전용」 은 절대 렌더되지 않는다. `ai_draft` 등 교사 위젯은 아예 검색·드래그·추가 불가.
 6. 카탈로그 카드 드래그 → 캔버스 아무 카드 위에 드롭 시 그 카드 인덱스 앞으로 삽입. 빈 영역에 드롭 또는 `+` 클릭 시 캔버스 끝에 추가.
 7. 크기 변경 / 삭제 / 드래그 이동 / 추가 / 「기본값」 모두 200ms 이내 `localStorage.dashboard_layout_student` 에 반영된다. localStorage 에 `type === "particle_deco"` 인 인스턴스가 남아있으면 첫 렌더 시 자동 제거된다.
-8. **내 수업** — 최대 6개 반. hover 시 `Trash2` 노출 → `AlertDialog` 확인 → `course_members.delete` → 로컬 즉시 제거 + `student-courses:refresh` 브로드캐스트. 실시간 채널로 반 정보 변경이 반영된다.
+8. **내 수업** — 최대 6개 반. hover 시 `Trash2` 노출 → `AlertDialog` 확인 → `leave_course` RPC → 로컬 즉시 제거 + `student-courses:refresh` 브로드캐스트. 실시간 채널로 반 정보 변경이 반영된다.
 9. **공개 수업** — 4개씩 페이지네이션, 좌/우 화살표 + `N/M` 뱃지. 이미 가입한 반은 초록 `Check` 뱃지 표시. `Plus` 클릭 → `course_members.insert({role:"student"})` → 낙관 UI + toast + 리프레시 이벤트. 중복 가입 시 info toast.
 10. **학습 기록** — 즐겨찾기 노래 / 참여 반 각각 실제 count 를 800ms cubic-out 이징으로 CountUp.
 11. **선생님께 메시지** — 참여 반 자동 로드(중복 제거). 반 0 → Textarea disabled + 「먼저 강의에 참여해 주세요」 Tooltip. 반 1 → Select 숨김, 이름 노출. 반 ≥2 → shadcn Select. 전송 성공 시 `course_student_posts.insert({type:"메시지", visibility:"private", status:"pending"})` + Textarea clear + toast.
-12. **즐겨찾기 노래** — 최대 6장 2열 카드, YouTube 썸네일(`mqdefault.jpg`) + 제목/artist. 카드 클릭 시 `song_analyses.maybeSingle()` 로드 후 `SongAnalysisDialog readOnly` 오픈. 분석 없음 → `analysisNotFound=true` 상태 명확 표시.
+12. **즐겨찾기 노래** — 최대 6장 2열 카드, `SongThumb`(저장 표지 → YouTube → Pixabay, 없으면 해시 그라디언트) + 제목/artist. 카드 클릭 시 `song_analyses.maybeSingle()` 로드 후 `SongAnalysisDialog readOnly` 오픈. 분석 없음 → `analysisNotFound=true` 상태 명확 표시.
 13. **공지 확인** — 참여 반의 최근 50개, `notice_reads` 로 읽음 관리. 미읽음 수 뱃지. 카드 클릭 시 옵티미스틱 read upsert (`onConflict:"user_id,notice_id"`) + 펼침 → `RepliesThread compact` 로 답글 가능. `shortTime` 포맷 준수.
 14. **체크리스트 3종** — 각각 지정된 localStorage 키에 저장. `daily_plan` 은 자정 지나면 새 키(`student_daily_plan_YYYY-MM-DD`)로 자동 초기화. `weekly_plan` 은 ISO 주 키. `learning_goal` 은 월/주 무관 지속.
 15. **캘린더** — 학생이 참여한 반만 자동 로드. 월 그리드에 dot 최대 3개 표시(코스 색 + 이벤트 타입 색). 오늘 = `bg-dash-navy` 원, 일요일 = `text-destructive`. 아젠다에서 `class` 반복 일정은 편집 불가·「숨기기」만 가능, `course_calendar_items` 자기 소유 행은 편집·삭제 가능. 커스텀 유형 추가는 12색 팔레트로. `hidden_calendar_courses` localStorage 로 반별 숨김/복원. 실시간 채널(`dash-cal-courses-<uid>`) 로 반 변경 즉시 반영.
