@@ -32,9 +32,9 @@
 
 - `useEffect` 로 `course` 를 fetch(`share_token` 또는 `id`)한다. 실패 시 "과정을 찾을 수 없습니다." 토스트.
 - `isShared && !user` → `/auth?redirect=<현재 경로>&course=<id>&courseName=<name>` 로 replace.
-- `authLoading || loading || (isShared && user && !profileChecked)` 동안 애니메이션 로더("로딩 중...", `min-h-[60vh]`).
+- `loading || (isShared && (authLoading || (user && !profileChecked)))` 동안 애니메이션 로더("로딩 중...", `min-h-[60vh]`). 즉 `authLoading` 은 공유 링크 진입일 때만 로더를 붙잡는다.
 - 학생 여부 확인 뒤:
-  - `user_roles` 조회 → `teacher` 또는 `admin` 이면 온보딩 스킵.
+  - **공유 링크가 아닌 경우(`!isShared`)에 한해** `user_roles` 조회 → `teacher` 또는 `admin` 이면 온보딩 스킵. 공유 링크 진입에서는 이 역할 검사를 건너뛰므로 교사도 프로필이 없으면 온보딩 다이얼로그를 만난다.
   - 그 외에는 `course_student_profiles` 에서 `member_user_id = user.id` 존재 여부 확인, `course_members` 를 `role='student'` 로 upsert(`onConflict: "course_id,user_id"`).
   - 프로필 없으면 `StudentOnboardingDialog` 열기(S2 재사용).
 - Hero 영역: 학생은 편집 모드 스위치·`표지 편집` 버튼이 렌더되지 않는다. `isShared` 이면 뒤로가기 버튼도 숨김(빈 `<div />` 로 자리만 차지).
@@ -80,7 +80,7 @@
   | `songs_list`            | 이모지 🎵 + artist · point.                                                                              |
   | `vocab_grid`            | 이모지 📖 + 3-column grid(중문·병음·한글).                                                               |
   | `weekly_preview`        | **`FocusedHomeBlocks.WeeklyPreviewBlock`** — `getCourseSchedule(course.start_date, weeks.length)` 로 상태 계산: `no_start_date` / `before_start` / `in_progress`. 진행 중이면 현재 주차의 `title`, `week_number`, `song_ids` 상위 2곡(`songs` 테이블 fetch)까지 카드로 표시. |
-  | `teacher_info`(가상)    | 위 §Home 규칙에 따라 학생 뷰에서만 삽입. 렌더러에는 정식 case 가 없으므로, **본 문서 요구사항**: 렌더러에 `case "teacher_info"` 를 추가하여 아바타 + 성함 + 소속 + bio 를 카드로 표시하도록 구현할 것. 존재하지 않는 case 로 떨어지면 렌더 미실행 → 반드시 오너의 `is_public_to_students` 토글이 켜졌을 때 학생 화면에 노출되어야 한다. |
+  | `teacher_info`(가상)    | `CourseHomeBlockType` 에 포함된 정식 타입이며 렌더러에 `case "teacher_info"` 가 구현되어 있다(`CourseHomeBlockRenderer.tsx:412`). 카드 = 👨‍🏫 아이콘 + 제목(기본 "교수 정보") + 아바타(없으면 이름 첫 글자) + 성함 + 소속 + bio(`whitespace-pre-wrap`). 학생 뷰에서는 오너의 `is_public_to_students` 가 켜져 있고 bio 가 있을 때만 가상 블록으로 삽입된다. |
 
 ### 2.4 캘린더 탭 (`CalendarTab`) — 학생 뷰
 
@@ -113,7 +113,8 @@
   - 학생에게는 잠금 토글 버튼(자물쇠 아이콘)이 렌더되지 않는다.
 - **노래 패널(`CourseSongPanel`)** — 학생:
   - 상단 "노래 추가" 툴바 숨김.
-  - 카드 그리드(sm:2, lg:3): YouTube 썸네일(`img.youtube.com/vi/<id>/mqdefault.jpg`), HSK 레벨 배지, title/artist. 카드 클릭 시 `it.song_id` 있으면 `/songs/${song_id}` 로 이동(공용 곡 분석 화면). 삭제 버튼 미노출.
+  - 카드 그리드(sm:2, lg:3): 썸네일은 `SongThumb` 컴포넌트가 담당하며 내부 `useSongCover` 표지 파이프라인(DB 저장 표지 → YouTube maxres/hq/mq → Pixabay → 그라디언트 폴백)을 그대로 따른다. HSK 레벨 배지, title/artist. 삭제 버튼 미노출.
+  - 카드 클릭 시 `it.song_id` 가 있으면 `navigate("/songs/" + song_id)` 를 호출한다. 단 현재 `App.tsx` 에는 `/songs` 목록 라우트만 등록되어 있고 `/songs/:id` 라우트는 없으므로 이 이동은 NotFound 로 떨어진다. **재현 시 요구사항**: `/songs/:id` 라우트를 추가하거나, 목록으로 보내고 분석 다이얼로그를 여는 방식으로 연결할 것.
 - **첨부 자료 패널(`CourseAttachmentPanel`)** — 학생:
   - 상단 "파일 업로드"·"추가" 드롭다운 숨김.
   - `material_type ∈ {file, link, text, embed}` 4종 렌더:
@@ -194,7 +195,7 @@
 | `course_calendar_items`         | SELECT / INSERT(본인) / DELETE(본인) | CalendarTab                    |
 | `course_material_items`         | SELECT (course member)      | 자료 3-서브탭                            |
 | `lesson_plans`, `lesson_weeks`  | SELECT (연결된 course)      | 강의안 패널, weekly_preview 블록          |
-| `songs`, `song_analyses`        | SELECT (public)             | weekly_preview, lyrics 블록, `/songs/:id` |
+| `songs`, `song_analyses`        | SELECT (public)             | weekly_preview, lyrics 블록, 노래 패널 썸네일(`SongThumb`) |
 | `course_notices`                | SELECT (course member)      | 알림 좌측 상단                            |
 | `course_student_posts`          | SELECT (public + own) / INSERT(own) / DELETE(own) | 알림 좌측 하단·컴포저 |
 | `notification_replies`          | SELECT (course member) / INSERT(own) / DELETE(own) | 답글 스레드            |
