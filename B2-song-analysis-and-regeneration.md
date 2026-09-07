@@ -1,9 +1,9 @@
 # B2 · 가사 분석 · 재생성 백엔드 재현 프롬프트
 
-> **본 프롬프트는 B 시리즈(B1–B4)의 2/4 — 백엔드(Supabase Edge Functions) 재현 자료.**
+> **본 프롬프트는 B 시리즈(B1–B3)의 2/3 — 백엔드(Supabase Edge Functions) 재현 자료.**
 > **적용 대상**: `supabase/functions/analyze-song`, `supabase/functions/regenerate-patterns`, `supabase/functions/reanalyze-wordlist`, `supabase/functions/tag-song-culture`, `supabase/functions/translate-lyrics-style`, `supabase/functions/bulk-reanalyze-batch`
 > **본 프롬프트는 `00-template.md` 의 5-Section 골격을 그대로 따른다.**
-> **범위 경계**: 곡 검색·자막 취득·가사 정규화는 B1, Suno 창작곡 생성은 B3, 배경영상 합성 콜백은 B4. 본 문서는 "확보된 가사 텍스트를 학습 데이터(줄 단위 병음/번역 · 단어장 · 문형 · 문화태그 · 번역 스타일)로 변환하고 재생성하는" 단계만 책임진다.
+> **범위 경계**: 곡 검색·자막 취득·가사 정규화는 B1, Suno 창작곡 생성은 B3. 배경영상 합성 콜백은 미작성 범위. 본 문서는 "확보된 가사 텍스트를 학습 데이터(줄 단위 병음/번역 · 단어장 · 문형 · 문화태그 · 번역 스타일)로 변환하고 재생성하는" 단계만 책임진다.
 
 ---
 

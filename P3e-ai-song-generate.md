@@ -401,7 +401,7 @@ VIDEO_KEYWORDS: (영어 3개를 + 로 연결, 예: ocean+sunset+waves)
 
 ### 4.1 프로젝트 맥락
 
-「멜로디 클래스」는 한중 이중언어 노래-기반 학습 플랫폼이다. 본 다이얼로그는 **노래 아카이브(`/songs`) 상단 `+곡 추가` 팝오버**의 3 번째 옵션 `YouTube 영상 생성 (AI 노래)` 에서 열린다. 저장 후 산출물은 `songs` 테이블에 `source = "ai_generated"` 로 표시되어(카드 배지 ✨) P3h 그리드에 정상 노출된다. 후속 분석·문화 태깅은 이미 존재하는 `analyze-song` · `tag-song-culture` 파이프라인(P4a/P4b)이 담당하므로, 본 프롬프트는 그들의 호출 신호만 발사한다.
+「멜로디 클래스」는 한중 이중언어 노래-기반 학습 플랫폼이다. 본 다이얼로그는 **노래 아카이브(`/songs`) 상단 `+곡 추가` 팝오버**의 3 번째 옵션 `YouTube 영상 생성 (AI 노래)` 에서 열린다. 저장 후 산출물은 `songs` 테이블에 `source = "ai_generated"` 로 표시되어(카드 배지 ✨) P3h 그리드에 정상 노출된다. 후속 분석·문화 태깅은 이미 존재하는 `analyze-song` · `tag-song-culture` 파이프라인(B2)이 담당하므로, 본 프롬프트는 그들의 호출 신호만 발사한다.
 
 ### 4.2 Lovable Cloud 후경 (Build with Lovable Cloud in Mind)
 

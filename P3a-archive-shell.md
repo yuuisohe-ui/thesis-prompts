@@ -110,7 +110,7 @@ import { SongCard } from "@/components/songs/SongCard";                         
   ├─ <YouTubeConfirmDialog />                      ── P3b 참조
   ├─ <CsvImportDialog />                           ── T2 참조
   ├─ <BulkSongCardDialog />                        ── T2 참조
-  ├─ <YoutubeVideoGenerateDialog />                ── P7(AI 생성)
+  ├─ <YoutubeVideoGenerateDialog />                ── P3e(AI 곡 생성)
   ├─ <SongStatsDrawer />                           ── P3g
   └─ <AddSongFab />                                ── P3b
 ```

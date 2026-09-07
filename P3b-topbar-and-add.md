@@ -1,7 +1,7 @@
 # P3b · 상단바 · 곡 추가 흐름 재현 프롬프트
 
 > **본 프롬프트는 P3 시리즈(P3a–P3q)의 2/17.** 
-> **적용 대상**: `src/components/songs/archive/ArchiveTopbar.tsx`, `AddSongFab.tsx`, 그리고 이들과 연결되는 진입 다이얼로그의 트리거 계약(다이얼로그 본체 UI 는 T2/P7 범위).
+> **적용 대상**: `src/components/songs/archive/ArchiveTopbar.tsx`, `AddSongFab.tsx`, 그리고 이들과 연결되는 진입 다이얼로그의 트리거 계약(다이얼로그 본체 UI 는 P3c·P3d·P3e 범위).
 > **본 프롬프트는 `00-template.md` 의 5-Section 골격을 그대로 따른다.**
 
 ---
@@ -106,7 +106,7 @@
 ## ④ Context (배경)
 
 ### 4.1 프로젝트 맥락
-검색·추가 두 축을 상단(스티키)과 하단(FAB) 두 위치에서 **동일한 콜백 인터페이스**로 노출한다. 데스크톱은 상단바, 모바일·롱스크롤 시나리오는 FAB 가 우선 진입 경로. 다이얼로그 본체(YouTubeSearchDialog / BulkSongCardDialog / YoutubeVideoGenerateDialog / CsvImportDialog)의 UI 는 각각 T2·P7 프롬프트에서 정의하고, 본 프롬프트는 오직 트리거만 담당한다.
+검색·추가 두 축을 상단(스티키)과 하단(FAB) 두 위치에서 **동일한 콜백 인터페이스**로 노출한다. 데스크톱은 상단바, 모바일·롱스크롤 시나리오는 FAB 가 우선 진입 경로. 다이얼로그 본체(YouTubeSearchDialog / BulkSongCardDialog / YoutubeVideoGenerateDialog / CsvImportDialog)의 UI 는 각각 P3c(YouTube 검색)·P3d(CSV 일괄 등록)·P3e(AI 곡 생성) 프롬프트에서 정의하고, 본 프롬프트는 오직 트리거만 담당한다.
 
 ### 4.2 Lovable Cloud 후경 (Lovable 실천 원칙 "Build with Lovable Cloud in Mind")
 

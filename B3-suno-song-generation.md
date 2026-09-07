@@ -1,10 +1,10 @@
 # B3 · Suno 창작곡 생성 전 과정 백엔드 재현 프롬프트
 
-> **본 프롬프트는 B 시리즈(B1–B4)의 3/4 — 백엔드(Supabase Edge Functions) 재현 자료.**
+> **본 프롬프트는 B 시리즈(B1–B3)의 3/3 — 백엔드(Supabase Edge Functions) 재현 자료.**
 > **적용 대상**: `supabase/functions/sg-generate-lyrics`, `sg-suno-generate`, `sg-suno-poll`, `sg-suno-lyrics`, `sg-pixabay-videos`, `sg-finalize-song`, `sg-repair-aligned`
 > **보조 모듈**: `src/lib/song-generator/suno-style.ts`(한국어 UI 라벨 → Suno 영문 태그 매핑), `src/lib/song-generator/suno-client.ts`(브라우저/Deno 공용 타입·단발 호출 래퍼)
 > **본 프롬프트는 `00-template.md` 의 5-Section 골격을 그대로 따른다.**
-> **범위 경계**: YouTube 검색·자막 취득·가사 정규화는 B1, 확보된 가사의 학습 데이터 변환은 B2, 배경영상 합성 콜백(`video-trigger`/`video-callback`)은 B4. 본 문서는 "주제 입력 → 가사 생성 → Suno 작곡 → 상태 폴링 → 단어 단위 타임스탬프 → 배경영상 후보 → 아카이브 저장" 사슬만 책임진다.
+> **범위 경계**: YouTube 검색·자막 취득·가사 정규화는 B1, 확보된 가사의 학습 데이터 변환은 B2, 배경영상 합성 콜백(`video-trigger`/`video-callback`)은 미작성 범위. 본 문서는 "주제 입력 → 가사 생성 → Suno 작곡 → 상태 폴링 → 단어 단위 타임스탬프 → 배경영상 후보 → 아카이브 저장" 사슬만 책임진다.
 
 ---
 

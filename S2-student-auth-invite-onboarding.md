@@ -4,7 +4,7 @@
 >
 > **범위**: `src/pages/Auth.tsx`, `src/pages/Onboarding.tsx`, `src/components/GlobalOnboardingDialog.tsx`, `src/components/courses/StudentOnboardingDialog.tsx`, `src/components/courses/JoinCourseDialog.tsx`, `src/pages/CourseDetail.tsx` 의 학생 게이트 부분, `src/hooks/useAuth.tsx`, `src/App.tsx` 의 `/shared/course/:token` 라우트, `src/components/RequireAuth.tsx`, `src/components/courses/studentAvatars.ts`.
 >
-> **비고**: S3(=기존 S1) 「내 공간」·S4「반 상세 학생 뷰」·S5「곡 학습」의 진입 지점만 제공하고 그 안의 UI 는 각 문서에 위임한다. 교사 온보딩·교사 대시보드는 포함하지 않는다.
+> **비고**: S1「내 공간」·S4「반 상세 학생 뷰」·P3 계열「노래 아카이브·곡 학습」의 진입 지점만 제공하고 그 안의 UI 는 각 문서에 위임한다. 교사 온보딩·교사 대시보드는 포함하지 않는다.
 
 ---
 

@@ -122,7 +122,7 @@
 ### 4.2 Lovable Cloud 후경 (Lovable 실천 원칙 "Build with Lovable Cloud in Mind")
 
 - Edge Function: `youtube-search`(YouTube Data API v3 프록시), `analyze-song`(가사·핀인·단어리스트·문법·문화 태그를 순차 생성 → songs·song_analyses·song_culture_tags 저장, `analysis_status` 를 `pending → processing → done|failed` 로 전이).
-- `songs.analysis_status` 컬럼은 P4a 에서 정의. 본 프롬프트는 클라이언트가 `pending` row 를 먼저 만들고 백그라운드에서 상태를 업데이트하는 계약만 참조.
+- `songs.analysis_status` 컬럼은 B2(분석·재생성) 에서 정의. 본 프롬프트는 클라이언트가 `pending` row 를 먼저 만들고 백그라운드에서 상태를 업데이트하는 계약만 참조.
 - `fetchWithRetry(retries: 3, baseDelay: 500)` 로 429 자동 백오프.
 
 ### 4.3 데이터 계약

@@ -118,7 +118,7 @@
 
 ### 4.2 Lovable Cloud 후경
 
-- Edge Function `bulk-reanalyze-batch`(P4a) 로 배치 재분석. 클라이언트는 5-병렬 스로틀만 담당.
+- Edge Function `bulk-reanalyze-batch`(B2) 로 배치 재분석. 클라이언트는 5-병렬 스로틀만 담당.
 - 성공 시 `songs` insert + `analyze-song` 트리거. 실패 시 클라이언트 배열에 축적 → 재시도 시 `bulk-reanalyze-batch` 호출.
 
 ### 4.3 데이터 계약

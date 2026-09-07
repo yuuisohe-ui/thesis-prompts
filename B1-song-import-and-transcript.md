@@ -1,9 +1,9 @@
 # B1 · 노래 임포트 · 자막 취득 백엔드 재현 프롬프트
 
-> **본 프롬프트는 B 시리즈(B1–B4)의 1/4 — 백엔드(Supabase Edge Functions) 재현 자료.**
+> **본 프롬프트는 B 시리즈(B1–B3)의 1/3 — 백엔드(Supabase Edge Functions) 재현 자료.**
 > **적용 대상**: `supabase/functions/youtube-search`, `supabase/functions/fetch-transcript`, `supabase/functions/get-youtube-transcript`, `supabase/functions/normalize-lyrics`, `supabase/functions/cover-image-cache`
 > **본 프롬프트는 `00-template.md` 의 5-Section 골격을 그대로 따른다.**
-> **범위 경계**: 가사 *분석*(`analyze-song` 이후)은 B2, Suno 생성은 B3, 영상 합성 콜백은 B4 에서 다룬다. 본 문서는 "곡을 찾아 들여오고, 텍스트(자막/가사)를 확보해 정규화하는" 단계까지만 책임진다.
+> **범위 경계**: 가사 *분석*(`analyze-song` 이후)은 B2, Suno 생성은 B3 에서 다룬다. 배경영상 합성·콜백(`sg-pixabay-videos`·`pixabay-search`·`video-trigger`·`video-callback`)과 계정 정리(`delete-account`)는 아직 별도 프롬프트 문서로 작성되지 않았다(미작성 범위). 본 문서는 "곡을 찾아 들여오고, 텍스트(자막/가사)를 확보해 정규화하는" 단계까지만 책임진다.
 
 ---
 
@@ -369,4 +369,4 @@ LLM(또는 Lovable)은 아래 순서대로 파일만 출력한다. 설명·사�
 | **B1**(본 문서) | 곡 임포트 · 자막 취득 · 가사 정규화 | `youtube-search` · `fetch-transcript` · `get-youtube-transcript` · `normalize-lyrics` · `cover-image-cache` |
 | **B2** | 가사 분석 · 부분 재생성 · 심화 카드 | `analyze-song` · `reanalyze-wordlist` · `regenerate-patterns` · `bulk-reanalyze-batch` · `translate-lyrics-style` · `tag-song-culture` · `generate-artist-*` · `generate-cultural-background` · `analyze-rhetoric` · `generate-emotion-analysis` · `generate-song-feature` · `generate-related-words` · `generate-vocab-examples` · `generate-example-sentence` |
 | **B3** | Suno 원곡 생성 전 과정 | `sg-generate-lyrics` · `sg-suno-lyrics` · `sg-suno-generate` · `sg-suno-poll` · `sg-repair-aligned` · `sg-finalize-song` |
-| **B4** | 배경 영상 합성 · 비동기 콜백 · 계정 정리 | `sg-pixabay-videos` · `pixabay-search` · `video-trigger` · `video-callback` · `delete-account` |
+| **(미작성)** | 배경 영상 합성 · 비동기 콜백 · 계정 정리 | `sg-pixabay-videos` · `pixabay-search` · `video-trigger` · `video-callback` · `delete-account` |
