@@ -2,7 +2,7 @@
 
 > 본 문서는 `docs/thesis/appendix/prompts/00-template.md`가 정의한 5-Section 표준(Identity · Instructions · Examples · Context · Acceptance & Output)을 그대로 따른다. 이론적 근거는 00-template.md에 정리되어 있으며 본 문서에서 재게시하지 않는다.
 > **범위**: 곡 분석 다이얼로그(P3j) → 「연습」 탭의 **발음 연습** 한 페이지. 소스: `src/components/songs/PronunciationPracticePage.tsx`(1849행) + 음성 관련 Edge Function 4종(`speech-evaluate` · `pronunciation-tone-change` · `pronunciation-coach` · TTS 2종 `xf-tts`/`typecast-tts`) + 공용 훅 `src/hooks/useXfTts.ts` + 개인정보 고지 컴포넌트 `src/components/songs/SpeechPrivacyNotice.tsx`. 다른 연습 모듈(퀴즈·받아쓰기·작문)은 P3p1·P3p2·P3p4에서 다룬다.
-> **기준 시점**: 2026-08 현재 코드. 이전 판 대비 변경점 — ① 한국어 TTS가 讯飞에서 **Typecast**로 이관, ② 발음 평가 전 **1회 동의 다이얼로그 + 상시 ⓘ 아이콘** 추가, ③ `speech-evaluate`가 `word_scores` · `lang_profile` · `integrity`를 반환하고 **한국어는 단어도 `core: "sent"`** 로 평가, ④ 중국어 TTS 발음인이 `x4_xiaoyan`으로 고정, ⑤ 페이지 내부 채점 함수는 **의도적으로 mock 상태로 남아 있으며** 실채점 경로는 `useSpeechEvaluate`(P3k/P3l 소비)임.
+> **기준 시점**: 2026-09 현재 코드. 이전 판 대비 변경점 — ① 한국어 TTS가 讯飞에서 **Typecast**로 이관, ② 발음 평가 전 **1회 동의 다이얼로그 + 상시 ⓘ 아이콘** 추가, ③ `speech-evaluate`가 `word_scores` · `lang_profile` · `integrity`를 반환하고 **한국어는 단어도 `core: "sent"`** 로 평가, ④ 중국어 TTS 발음인이 `x4_xiaoyan`으로 고정, ⑤ **페이지 내부 채점이 mock에서 실채점으로 승격**되어 `evaluatePronunciation()`이 `blobToMp3Base64()`(`src/lib/speechAudio.ts`) → `speech-evaluate` Edge Function을 직접 호출한다(난수 채점·`rhythm` 지표는 코드에서 제거됨).
 
 ---
 
@@ -39,7 +39,7 @@ Rec:    idle → recording → evaluating → done
 - `lang` · `mode` · `order` · `phase`는 서로 독립된 `useState`. 뒤로가기는 `prac|final`에서 누르면 페이지를 벗어나지 않고 `start`로 되돌리며 `current=0`, `evalData=null`, `detailOpen=false`, `coachData=null`로 초기화하고 진행 중인 TTS를 `stopTts()`로 정지한다.
 - 문제 풀은 `wordPoolZh` / `wordPoolKo` / `sentPool` 세 갈래로 분리 보관한다. 단어 풀은 곡 단어장에서, 문장 풀은 가사 라인에서 만든다. `mergeWords`는 `${ko}|${zh}` 키로 중복을 제거하며 누적 병합한다.
 - `order`: `seq`(순서대로) · `rand`(`shuffle`) · `inf`(무한 반복 — `current`를 `(c+1) % length`로 순환하며 `final`로 자동 이동하지 않고, 하단 「■ 연습 종료 및 결과 보기」 버튼으로만 종료).
-- 문제 타입은 `WordQ`(zh/ko/pinyin 등) | `SentQ`의 유니언 `Q`. 채점 결과는 `ScoreData { overall, pron, tone, fluency?, rhythm?, integrity? }`, 누적 기록은 `ResultEntry { q, scoreData }[]`.
+- 문제 타입은 `WordQ`(zh/ko/pinyin 등) | `SentQ`의 유니언 `Q`. 채점 결과는 `ScoreData { overall, pron, tone?, fluency?, integrity?, words?: { text, pron, tone?, overall }[] }`(`tone`은 **중국어에서만** 채워지고, `words`는 엔진의 `word_scores`를 매핑한 값), 누적 기록은 `ResultEntry { q, scoreData }[]`.
 
 ### 2.3 병음 음절 분해와 성조 판정 (핵심 알고리즘, 그대로 재현할 것)
 
@@ -90,14 +90,24 @@ Rec:    idle → recording → evaluating → done
 
 **개인정보 고지 게이트** — `startRecording()` 첫 줄에서 `isSpeechNoticeAcked()`를 확인하고, 미동의면 녹음을 시작하지 않고 `noticeOpen=true`로 `SpeechNoticeDialog`를 띄운다. 확인 → `ackSpeechNotice()` 후 녹음 재개, 취소 → 중단(다음 클릭 때 다시 표시). 고지 문구는 `SPEECH_NOTICE_TEXT = "음성이 발음평가를 위해 외부 서비스로 전송됩니다."`, `localStorage` 키는 `speech-eval-notice-ack`.
 
-**채점** — `MediaRecorder`로 `audio/webm` blob을 만든 뒤 `evaluatePronunciation(blob, text, lang, mode)`을 호출하고, 결과를 `evalData` + `results`에 적재한다.
-> **현행 코드 주의(반드시 그대로 재현)**: 페이지 내부 `evaluatePronunciation()`은 900ms 지연 후 난수를 돌려주는 **mock**이며 `// TODO: language-specific evaluation API` 주석이 남아 있다. 단어 모드는 `{ overall, pron, tone }`, 문장 모드는 `fluency` · `rhythm` · `integrity`를 추가로 반환한다. 실채점 경로는 `src/hooks/useSpeechEvaluate.ts` → `speech-evaluate`이며, 현재 가사 탭·단어장 탭(P3k·P3l)에서만 사용된다. 본 페이지를 실채점으로 승격할 때의 계약은 2.8에 명시한다.
+**채점(실채점 — mock 아님)** — 녹음은 `getUserMedia({ audio: { sampleRate: 16000, channelCount: 1 } })` + `MediaRecorder`. `onstop`에서 마이크 트랙을 회수하고 `recState="evaluating"`으로 바꾼 뒤, blob과 현재 문제 텍스트(단어 모드는 `lang==="ko" ? q.ko : q.zh`, 문장 모드는 `lang==="zh" ? q.zh : q.ko`)로 `evaluatePronunciation(blob, text, lang, mode)`을 호출한다.
 
-**점수 카드** — 총점 링(`ringClass`: 90+ emerald · 75+ blue · 60+ amber · 그 미만 red, `w-[72px] h-[72px] border-[3px]`) + `EvalBars`. 막대는 `발음`(primary), `성조`(amber, **한국어 모드에서는 라벨이 `음운`**), 문장 모드에서만 `유창성`(emerald) · `운율`(violet) · `완성도`(orange).
+`evaluatePronunciation()` 내부 계약(그대로 재현):
+1. 사전 검증 — blob 없음/0바이트 → `녹음된 음성이 없습니다. 다시 시도해 주세요.`, 빈 텍스트 → `평가할 텍스트가 없습니다.` (`class EvalError extends Error`).
+2. `blobToMp3Base64(blob)`(`src/lib/speechAudio.ts`: `AudioContext({ sampleRate: 16000 })` 디코드 → mono Float32 → lamejs `Mp3Encoder(1, sr, 32)` → 청크 base64). 실패 시 `음성 변환에 실패했습니다. 다시 녹음해 주세요.`, 빈 문자열이면 `음성이 너무 짧습니다. 다시 녹음해 주세요.`
+3. `supabase.functions.invoke("speech-evaluate", { body: { audio_base64, text, category: mode === "word" ? "read_word" : "read_sentence", lang } })`.
+4. invoke 오류 → `평가 서버에 연결하지 못했습니다. 잠시 후 다시 시도해 주세요.`, `data.error` → 해당 문구 그대로, `total_score`·`pronunciation`이 모두 0 이하 → `음성을 인식하지 못했습니다. 조금 더 또렷하게 다시 녹음해 주세요.`
+5. 매핑 — `overall/pron/fluency/integrity`는 반올림, `tone`은 **`lang === "zh"`일 때만** 채우고, `word_scores[]`는 `{ text, overall, pron: pronunciation ?? overall, tone: zh일 때만 }`로 변환하고 빈 `text`는 버린다.
+
+성공하면 `evalData` 세팅 + `results`에 push + `recState="done"` + `detailOpen=false` + `coachData=null`. **실패하면 `results`에 쌓지 않고**(최종 통계 오염 방지) `evalData=null`, `recState="idle"`로 되돌리며 `발음 평가 실패` destructive 토스트에 `EvalError` 메시지를 그대로 노출한다. 마이크 권한 거부는 별도로 `마이크 접근 실패 / 마이크 권한을 허용해 주세요.` 토스트.
+
+**점수 카드** — 총점 링(`ringClass`: 90+ emerald · 75+ blue · 60+ amber · 그 미만 red, `w-[72px] h-[72px] border-[3px]`) + `EvalBars`. 막대는 `발음`(primary), `성조`(amber, **`lang==="zh"` 이고 `tone > 0`일 때만**; 한국어 엔진은 성조를 돌려주지 않으므로 막대 자체가 사라진다), 문장 모드에서만 `유창성`(emerald) · `완성도`(orange). **`운율`(rhythm) 막대는 존재하지 않는다.**
 
 **자세히 보기(`detailOpen`)** — 토글을 열 때만 아래를 렌더한다.
-- `분석 차트`: recharts `RadarChart`. 단어 모드는 축 3개(`발음` · `성조|음운` · `정확도 = round((pron+tone)/2)`), 문장 모드는 축 5개(`발음` · `성조|음운` · `유창성` · `운율` · `완성도`). `PolarRadiusAxis domain={[0,100]}`, 그리드·축은 `hsl(var(--border))` / `hsl(var(--muted-foreground))` 토큰 사용.
-- `글자별 분석`: **중국어 단어 모드에서만** `CharAnalysis` 렌더(글자별 안정 난수 점수).
+- `분석 차트`: recharts `RadarChart`, 축은 `buildRadarData()`가 만든다. 항상 `발음`으로 시작하고, `zh` + `tone>0`이면 `성조` 추가, 문장 모드면 `유창성` · `완성도`, 단어 모드면 `정확도(= overall)`를 넣고 축이 3개 미만이면 `유창성`(없으면 `overall`)을 보충한다. → 중국어 단어 3축 / 한국어 단어 3축(발음·정확도·유창성) / 문장 4축(zh) · 3축(ko). `PolarRadiusAxis domain={[0,100]}`, 그리드·축은 `hsl(var(--border))` / `hsl(var(--muted-foreground))` 토큰 사용.
+- `글자별 분석`: **중국어 단어 모드에서만** `CharAnalysis`. 글자 순서대로 `sd.words[i]`의 실제 점수를 매칭하고, 엔진이 글자 수보다 적게 돌려주면 전체 `pron`/`tone`으로 폴백한다(난수 아님). 상태 아이콘은 `pron≥80 && (tone===0 || tone≥80)` → ✅, `pron≥70` → ⚠️, 그 외 ❌.
+- `단어별 점수`: 그 외 조합(한국어 전체 · 문장 모드)에서 `words`가 있을 때 `WordScoreList` 렌더 — 텍스트 + `발음` 막대(+ zh면 `성조`) + ✅/⚠️/❌(80/60 기준).
+- `취약 부분`: `words` 중 `0 < overall < 60`인 항목만 모아 강조 표시(없으면 섹션 자체를 렌더하지 않음).
 - `🤖 AI 발음 코치`: 토글을 열 때 **지연 호출**. 캐시 키 `"{lang}:{mode}:{text}:{round(overall/5)*5}"`, 로딩 시 `피드백을 생성하고 있습니다...`, 결과는 본문 + 선택적 팁 박스.
 - `📈 연습 기록`: 같은 문제의 이전 시도 목록(`HistoryList`).
 - 하단 액션: `다시 녹음`(RotateCcw) / `다음 →`.
@@ -129,7 +139,7 @@ Rec:    idle → recording → evaluating → done
 - Typecast 계약: `POST https://api.typecast.ai/v1/text-to-speech`, 헤더 `X-API-KEY: TYPECAST_API_KEY`, 본문 `{ text, model: "ssfm-v30", language: "kor", voice_id: TYPECAST_VOICE_ID_KO ?? "tc_67db72eb93add6902ea41e5c", output: { audio_format: "mp3" } }`. 앱의 讯飞식 `speed`(0~100, 50=보통)는 `tempo = clamp(speed/50, 0.5, 2)`로 환산한다. 401/402/403/429는 `fallback: true`로 내려 브라우저 음성으로 강등한다.
 - 讯飞 TTS 계약: `wss://tts-api.xfyun.cn/v2/tts`, 발음인 후보 배열의 **첫 값은 `x4_xiaoyan`**, 11200(발음인 미개통) 발생 시 다음 후보로 순차 재시도, `aue: "lame"`(MP3).
 
-### 2.8 실채점 계약 (`speech-evaluate`, 승격 시 정답 스펙)
+### 2.8 실채점 계약 (`speech-evaluate` — 본 페이지에 이미 적용됨)
 
 - 요청 `{ audio_base64(MP3 16k mono), text, category: "read_word" | "read_sentence", lang: "zh" | "ko" }`.
 - 엔드포인트: `zh` → `/v1/private/s8e098720`(`lang: "cn"`), `ko` → `/v1/private/sffc17cdb`(`lang: "kr"`). 호스트 `cn-east-1.ws-api.xf-yun.com`, HMAC-SHA256 서명 URL.
@@ -157,8 +167,9 @@ Rec:    idle → recording → evaluating → done
 | 낭독 버튼 | `🔊 표준 발음` · `🐢 천천히` |
 | 녹음 상태 | `버튼을 눌러 녹음하세요` · `녹음 중... 다시 눌러 완료` · `평가 중...` · `평가 완료!` |
 | 고지 문구 | `음성이 발음평가를 위해 외부 서비스로 전송됩니다.` |
-| 점수 항목 | `발음` · `성조`(한국어는 `음운`) · `유창성` · `운율` · `완성도` |
-| 상세 섹션 | `분석 차트` · `글자별 분석` · `🤖 AI 발음 코치` · `📈 연습 기록` |
+| 점수 항목 | `발음` · `성조`(중국어 전용) · `유창성` · `완성도` |
+| 평가 실패 토스트 | `발음 평가 실패` · `마이크 접근 실패` / `마이크 권한을 허용해 주세요.` |
+| 상세 섹션 | `분석 차트` · `글자별 분석` · `단어별 점수` · `취약 부분` · `🤖 AI 발음 코치` · `📈 연습 기록` |
 | 결과 화면 | `평균 점수` · `총 연습` · `평가 완료` · `평균 발음` · `✅ 가장 잘한 단어` · `⚠️ 더 연습이 필요해요` · `단어별 결과` |
 | 결과 버튼 | `← 처음으로` · `다시 연습하기` |
 
@@ -200,7 +211,8 @@ PronunciationPracticePage
 6. `자세히 보기` → 레이더(발음 · 성조 · 정확도) + 글자별 분석 + `pronunciation-coach` 한국어 코칭.
 
 **반례 1**: `你好`처럼 3성이 연속되면 `has_change: true`, `standard: "nǐ hǎo"`, `actual: "ní hǎo"`, `rule`에 「3성 연속 시 앞 3성이 2성으로」가 채워진다.
-**반례 2**: 「한국어 · 단어 발음」에서는 성조 뱃지·곡선이 모두 사라지고 막대 라벨이 `음운`으로 바뀌며, TTS는 `typecast-tts`(ssfm-v30 · kor)로 나간다.
+**반례 2**: 「한국어 · 단어 발음」에서는 성조 뱃지·곡선·성조 막대가 모두 사라지고(엔진이 성조를 반환하지 않음) `글자별 분석` 대신 `단어별 점수`가 뜨며, TTS는 `typecast-tts`(ssfm-v30 · kor)로 나간다.
+**반례 3**: 무음 상태로 녹음을 끝내면 `speech-evaluate`가 0점 또는 `error`를 돌려주고, 점수 카드 대신 `발음 평가 실패` 토스트가 뜨며 상태가 `idle`로 돌아가 `results`에도 기록되지 않는다.
 
 ---
 
@@ -222,12 +234,15 @@ PronunciationPracticePage
 - [ ] `splitPinyinToSyllables("gǎnjué")` → `["gǎn","jué"]`, `ng` 모호 케이스에서 `g`가 다음 음절 초성으로 넘어간다.
 - [ ] 성조 부호가 없는 음절은 5(경성)로 판정된다.
 - [ ] 첫 녹음 시도에서 동의 다이얼로그가 정확히 1회 뜨고, 이후에는 뜨지 않으며 ⓘ 아이콘은 상시 노출된다(`localStorage.speech-eval-notice-ack === "1"`).
-- [ ] `lang==="ko"`이면 성조 뱃지·곡선·`글자별 분석` 섹션이 렌더되지 않고 막대 라벨이 `음운`으로 바뀐다.
+- [ ] `lang==="ko"`이면 성조 뱃지·곡선·성조 막대·`글자별 분석`이 렌더되지 않고, `words`가 있으면 `단어별 점수`가 대신 나온다.
+- [ ] 녹음 1회당 `speech-evaluate` 호출이 정확히 1건 발생하고(`Math.random()` 기반 점수 0건), 요청 본문의 `category`가 단어=`read_word` · 문장=`read_sentence`, `lang`이 현재 선택 언어와 일치한다.
+- [ ] 평가 실패(무음 · `data.error` · 네트워크 오류) 시 점수 카드가 뜨지 않고 `발음 평가 실패` 토스트 + `recState==="idle"`이며 `results` 길이가 증가하지 않는다.
+- [ ] 최종 결과 화면의 평균 총점·평균 발음이 실제 엔진 점수 누적값과 일치한다.
 - [ ] TTS 요청이 `ko` → `typecast-tts`, `zh` → `xf-tts`로 라우팅되고, 실패 시 브라우저 음성으로 폴백해 버튼이 죽지 않는다.
 - [ ] 동일 `text+lang+speed`의 2회차 낭독은 네트워크 요청 0건(캐시 히트).
 - [ ] 변조 해설이 `localStorage(tc2:)`에 캐시되고, 429에서 최대 3회 지수 백오프 재시도하며, 다음 문제를 프리페치한다.
 - [ ] 코칭 코멘트는 `자세히 보기`를 열 때만 호출된다(초기 렌더에서 호출 0건).
-- [ ] 레이더 축 개수가 단어 3개 / 문장 5개로 달라진다.
+- [ ] 레이더 축이 `buildRadarData()` 규칙대로 구성되고 `운율` 축은 어디에도 없다.
 - [ ] 무한 모드에서는 `final`로 자동 전환되지 않고 종료 버튼으로만 결과 화면에 진입한다.
 - [ ] 언마운트 시 TTS·타이머·MediaRecorder·마이크 트랙이 모두 정리된다(트랙 `readyState === "ended"`).
 - [ ] `grep -n "bg-\[#" PronunciationPracticePage.tsx` 결과 0건(성조 팔레트는 `hsl(...)` 상수 테이블로만 존재).

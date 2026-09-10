@@ -25,6 +25,8 @@
 - `src/components/AppSidebar.tsx` — 역할별 메뉴(교사/학생), 축소 상태, admin view switcher.
 - `src/components/RequireAuth.tsx` — 미인증 → `/auth?redirect=…`, 온보딩 필요 → `/onboarding`, 학생 접근 화이트리스트.
 - `src/lib/fetchWithRetry.ts` — Exponential Backoff + AbortController + 429/402 한국어 토스트.
+- `index.html` — 사이트 타이틀 · 메타 설명 · favicon · Apple Touch Icon · Open Graph / Twitter 카드 메타(2.4 참조).
+- `public/brand-logo.png` · `public/favicon.png` · `public/apple-touch-icon.png` — 브랜드 이미지 자산(2.5 참조).
 
 ### 2.2 원자적 UI 규칙 (Atomic Language)
 - "헤더"가 아니라 "h-14 border-b bg-card, 좌측 SidebarTrigger + '한중 노래 기반 교육 플랫폼' 태그라인, 우측 Avatar(fallback 이니셜) + 이름(sm 이상 노출) + 로그아웃 ghost 아이콘 버튼".
@@ -39,6 +41,43 @@
 - 라우트 전환 시 스크롤 top으로 초기화.
 - 모바일 breakpoint(`sm`, `md`) 에서 사이드바 자동 접힘.
 - `supabase.auth.onAuthStateChange` 는 `useAuth` 훅 내부에서만 구독하며, 다른 컴포넌트는 파생 상태만 소비.
+
+### 2.4 `index.html` 메타 계약 (그대로 재현)
+
+```html
+<title>멜로디 클래스</title>
+<meta name="description" content="노래와 AI를 활용한 한중 언어 학습 플랫폼입니다.">
+<link rel="icon" href="/favicon.png" type="image/png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="멜로디 클래스">
+<meta property="og:description" content="노래와 AI를 활용한 한중 언어 학습 플랫폼입니다.">
+<meta property="og:image" content="{배포 도메인}/…/ogimage-1200x630.png">
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="멜로디 클래스">
+<meta name="twitter:description" content="노래와 AI를 활용한 한중 언어 학습 플랫폼입니다.">
+<meta name="twitter:image" content="{배포 도메인}/…/ogimage-1200x630.png">
+```
+
+- `lang="en"`, `<meta name="viewport" content="width=device-width, initial-scale=1.0">` 유지.
+- OG/Twitter 이미지는 **절대 URL** 이어야 하며 1200×630 규격을 사용한다(상대경로 금지 — 외부 크롤러가 해석하지 못함).
+- 한자 필기 애니메이션용 `hanzi-writer@3.5` CDN 스크립트를 `<head>` 끝에 유지한다.
+- 구 favicon(`favicon.ico`)은 삭제하고 PNG 한 벌만 남긴다.
+
+### 2.5 브랜드 이미지 자산 규칙
+
+| 파일 | 규격 | 용도 |
+|---|---|---|
+| `public/brand-logo.png` | 256×256 PNG(투명) | 홈 상단 네비게이션 브랜드 버튼(`w-[34px] h-[34px] object-contain rounded-[9px]`, 클릭 시 `/dashboard`) |
+| `public/favicon.png` | 64×64 PNG(투명) | 브라우저 탭 아이콘 |
+| `public/apple-touch-icon.png` | 180×180 PNG | iOS 홈 화면 아이콘 |
+| OG 이미지 | 1200×630 PNG | 카카오톡·트위터 등 링크 공유 미리보기 |
+
+- 세 아이콘은 모두 **원본을 등비 축소**해 만들고, 부족한 여백은 투명 패딩으로 채운다. 내용이 잘리는 강제 crop 금지.
+- 홈 네비게이션 브랜드 마크에 emoji(`🎵`)를 쓰지 않는다. 반드시 `/brand-logo.png` 이미지.
+- OG 이미지는 등비 축소 후 브랜드 네이비 배경으로 1200×630을 채운다.
 
 ## ③ Examples (예시)
 
@@ -102,14 +141,19 @@ SPA 구조. 라우트는 3층으로 구분:
 - `AppLayout` 없이 렌더된 내부 페이지 수 = 0 (`rg -L "AppLayout" src/pages` 로 화이트리스트만 남음).
 - Lighthouse 접근성 ≥ 95, CLS ≤ 0.05.
 - 라우트 전환 후 `window.scrollY === 0` 만족률 = 100 %.
+- 브라우저 탭 제목이 `멜로디 클래스` 로 표시되고, `/favicon.png` · `/apple-touch-icon.png` · `/brand-logo.png` 가 모두 HTTP 200 · `content-type: image/png`.
+- `rg -n "Lovable App|Lovable Generated Project|favicon.ico" index.html` = 0 건.
+- OG/Twitter 태그 8종(`og:type` · `og:title` · `og:description` · `og:image` · `twitter:card` · `twitter:title` · `twitter:description` · `twitter:image`)이 모두 존재하고 이미지 URL 은 `https://` 절대 경로.
+- 홈 네비게이션 브랜드 버튼에 `<img src="/brand-logo.png">` 가 정확히 1회 존재하고 emoji 로고는 0 건.
 
 ### 5.2 Output Format
 반환 순서(그 외 텍스트 금지):
 1. `src/index.css` (CSS 변수 + Tailwind directives)
 2. `tailwind.config.ts`
-3. `src/App.tsx`
-4. `src/components/AppLayout.tsx`
-5. `src/components/AppSidebar.tsx`
-6. `src/components/RequireAuth.tsx`
-7. `src/lib/fetchWithRetry.ts`
-8. 한국어 3줄 요약.
+3. `index.html` (타이틀 · 메타 · 아이콘 · OG/Twitter)
+4. `src/App.tsx`
+5. `src/components/AppLayout.tsx`
+6. `src/components/AppSidebar.tsx`
+7. `src/components/RequireAuth.tsx`
+8. `src/lib/fetchWithRetry.ts`
+9. 한국어 3줄 요약.
