@@ -26,7 +26,9 @@
 - `CtaBanner`, `Footer` — 하단 전환 유도 및 공용 푸터.
 
 ### 2.2 원자적 UI 규칙 (Atomic Language)
-- "탑 NAV" 가 아니라 "`h-16 fixed top-0 z-50` + `rgba(15,26,54,0.96)` 배경 + `backdrop-blur-xl` + 좌측 🎵 아이콘 로고(→ `/dashboard`) + 우측 앵커 버튼 2개(스무스 스크롤) + 우측 [로그인] outline 버튼(→ `/onboarding`)".
+- "탑 NAV" 가 아니라 "`h-16 fixed top-0 z-50` + `rgba(15,26,54,0.96)` 배경 + `backdrop-blur-xl` + `border-b border-white/[.06]` + 좌측 브랜드 버튼(`<img src="/brand-logo.png" alt="" className="w-[34px] h-[34px] object-contain rounded-[9px]" />` + `멜로디 클래스` 텍스트, → `/dashboard`) + 우측 앵커 버튼 2개(스무스 스크롤) + 우측 [로그인] outline 버튼(→ `/onboarding`)".
+- 브랜드 로고는 emoji 가 아니라 `public/brand-logo.png` (업로드된 골드 라운드 스퀘어 + 음표 마크)를 `<img>` 로 렌더한다. 동일 원본에서 파생된 `public/favicon.png`(64×64) · `public/apple-touch-icon.png`(180×180) 은 `index.html` 에서 링크한다. 로고 텍스트 옆 이모지 병기 금지.
+- **모바일 NAV 현행 동작**: 앵커 버튼 2개는 `hidden sm:inline` 이라 640 px 미만에서 감춰지고, 좌측 브랜드 버튼과 우측 [로그인] 버튼만 남는다. 별도의 햄버거 메뉴·드로어는 현재 존재하지 않는다(재현 시 임의로 추가하지 말 것).
 - "히어로" 가 아니라 "다크네이비(`#0F1A36`) 풀-스크린 섹션 + 상단 골드 배지(pill) + H1 2줄(`font-serif`, `clamp(34px,5vw,58px)`, 두 번째 줄 골드 `<em>` 강조) + Sub 1줄(muted white/55) + Primary CTA(골드 그라디언트) + Secondary CTA(반투명 화이트) + 하단 통계 3카드(가운데 정렬, 구분선)".
 - "WHY 섹션" 이 아니라 "흰 배경 `py-28`, 상단 골드 uppercase 태그(`tracking-[2.5px]`) + 3px 골드 언더라인 + 큰따옴표 인용문(`font-serif`, 골드 따옴표 강조) + 본문 2줄 + 출처 캡션(`italic`)".
 - "역할 스위처" 가 아니라 "capsule pill 2 세그먼트, active 시 `bg-primary text-white`, 클릭 시 크로스페이드 200 ms".
@@ -44,7 +46,7 @@
 ### 3.1 확정 카피 표 (Real Content)
 | 위치 | 한국어 카피 |
 |---|---|
-| NAV 로고 | 🎵 멜로디 클래스 |
+| NAV 로고 | `/brand-logo.png` 이미지(34×34, `rounded-[9px]`) + 멜로디 클래스 |
 | NAV 앵커 1 | 왜 노래인가 (→ `#why` 스무스 스크롤) |
 | NAV 앵커 2 | 주요 기능 (→ `#features` 스무스 스크롤) |
 | NAV CTA | 로그인 (→ `/onboarding`) |
@@ -68,7 +70,8 @@
 ```text
 <Home>
   ├─ <TopNav>  (fixed, h-16, dark navy)
-  │   ├─ 🎵 멜로디 클래스
+  │   ├─ <img src="/brand-logo.png" /> 멜로디 클래스
+  │   │     (앵커 2개는 sm 미만에서 hidden)
   │   └─ [왜 노래인가] [주요 기능] [로그인]
   ├─ <HeroSection id="home">  (bg #0F1A36)
   │   ├─ Badge · H1 · Sub
@@ -113,6 +116,9 @@
 - `rg -n "Richards, J. C. \(1969\)" src/pages/Home.tsx | wc -l` ≥ 1 (WHY 섹션 출처 캡션 렌더 확인).
 - `rg -n "노래는 단순한 흥미 유발 도구가 아닙니다" src/pages/Home.tsx | wc -l` = 1.
 - 히어로 통계 카드 개수 = 3 (`querySelectorAll` 로 검증).
+- NAV 브랜드 영역에 `<img src="/brand-logo.png">` 가 정확히 1개 존재하고 emoji 로고 문자열은 0건(`rg -n "/brand-logo.png" src/pages/Home.tsx | wc -l` = 1).
+- `/brand-logo.png` · `/favicon.png` · `/apple-touch-icon.png` 요청이 각각 HTTP 200 · `content-type: image/png`.
+- 뷰포트 390 px 에서 NAV 앵커 2개는 비표시, 브랜드 버튼과 [로그인] 버튼만 노출된다.
 - 상단 NAV 는 `position: fixed` 이며 스크롤해도 항상 상단 노출(Playwright `getBoundingClientRect().top === 0`).
 - `#why` / `#features` 앵커 클릭 시 스무스 스크롤 동작, `#features` 는 커스텀 이징 1500 ms.
 - 다크모드 히어로 텍스트 대비비 ≥ 4.5 (axe DevTools).

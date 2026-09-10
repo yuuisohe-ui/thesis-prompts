@@ -47,8 +47,12 @@
 - 자동 회전 4500 ms, 사용자 조작 시 `resetTimer()`.
 
 **ArtistShelf**:
-- 서버 조회: `songs.select("artist").is("deleted_at", null).not("artist","is",null).limit(1000)` → 집계 top12.
-- 원형 아바타 `w-20 h-20 rounded-full`, 이미지 소스 우선순위: `ARTIST_IMAGE_MAP[name]` → `/artists/{name}.jpg` → 이니셜 폴백. 그라디언트 12종 해시 배정.
+- 서버 조회: `songs.select("artist").is("deleted_at", null).not("artist","is",null).limit(1000)` → 집계 top12. 곡 수 내림차순 정렬 후 `slice(0, 12)`.
+- 최초 로드 시 `supabase.auth.getUser()` 를 **병렬**로 호출해 uid 를 얻고, 로그인 상태라면 `user_preferences.select("artist_order").eq("user_id", uid).maybeSingle()` 로 사용자 정렬을 읽어 `applyOrder(list, order)` 로 재배열한다. `artist_order` 에 없는 이름은 `Number.MAX_SAFE_INTEGER` 로 밀어 뒤쪽에 배치(즉 신규 아티스트는 기존 순서를 깨지 않고 뒤에 붙는다). 비로그인이거나 `artist_order` 가 비면 곡 수 정렬 그대로 사용.
+- **드래그 정렬(HTML5 native DnD, @dnd-kit 사용 안 함)**: 각 아바타 버튼에 `draggable`, `onDragStart`(`setDragName(name)`, `effectAllowed="move"`, `dataTransfer.setData("text/plain", name)`), `onDragOver`(`preventDefault()`, `dropEffect="move"`), `onDrop`, `onDragEnd`(`setDragName(null)`). drop 시 `splice` 로 source 를 target 위치에 삽입하고 `persistOrder(next)` 를 **await 하지 않고**(`void`) 호출해 낙관적 반영한다.
+- `persistOrder` 는 `user_preferences.upsert({ user_id, artist_order: names[] }, { onConflict: "user_id" })`. uid 가 없으면 즉시 return(비로그인 시 정렬은 세션 한정).
+- 드래그와 클릭 격리: `draggedRef` 플래그를 두고 drop 직후의 `onClick` 은 한 번 무시한다. 드래그 중인 아바타는 `opacity-40`, 커서는 `cursor-grab active:cursor-grabbing`.
+- 원형 아바타 `w-20 h-20 rounded-full`, 이미지 소스 우선순위: `ARTIST_IMAGE_MAP[name]` → `/artists/{encodeURIComponent(name)}.jpg` → 이니셜 폴백. 그라디언트 12종 해시 배정(`hashIdx`, `h = h*31 + charCodeAt`).
 - 하단 텍스트: `{name}` truncate max-w-80 + `{count}곡`.
 - 로딩 시 스켈레톤 8개.
 
@@ -127,7 +131,7 @@
 ### 4.2 Lovable Cloud 후경 (Lovable 실천 원칙 "Build with Lovable Cloud in Mind")
 
 - ArchiveHero: 데이터는 셸이 주입. 슬라이드 5장 이하일 때 화살표·도트 숨김.
-- ArtistShelf: 자체 조회. 4-상태 = 로딩(스켈레톤 8) / 빈(아티스트 0 → null 반환) / 에러(supabase 오류 시 조용히 null) / 성공.
+- ArtistShelf: 자체 조회. 4-상태 = 로딩(스켈레톤 8) / 빈(아티스트 0 → null 반환) / 에러(supabase 오류 시 조용히 null) / 성공. 사용자 정렬은 `user_preferences.artist_order` 에 저장하며, 저장 실패는 화면 순서를 되돌리지 않는다(낙관적 반영, 조용한 실패).
 - 이미지 실패 시 그라디언트 폴백 — 네트워크 실패에도 시각적 완결성 유지.
 
 ### 4.3 데이터 계약 (참고 팔레트·상수)
@@ -144,6 +148,15 @@
 
 `ArtistShelf` 쿼리는 `songs.select("artist").is("deleted_at", null).not("artist","is",null).limit(1000)`. RLS 는 P3e 에서 정의.
 
+`user_preferences` (아티스트 정렬 지속화용):
+
+| 컬럼 | 타입 | 설명 |
+|---|---|---|
+| `user_id` | uuid PK/FK → `auth.users.id` | upsert 충돌 키(`onConflict: "user_id"`) |
+| `artist_order` | text[] (jsonb 배열 허용) | 아티스트 이름 배열. 화면 좌→우 순서 |
+
+RLS: 본인 행만 select/insert/update (`auth.uid() = user_id`). 비로그인 사용자는 읽기·쓰기 모두 수행하지 않는다.
+
 ## ⑤ Acceptance & Output
 
 ### 5.1 Acceptance Criteria
@@ -151,6 +164,10 @@
 - ArchiveHero 자동 회전 인터벌이 4500 ± 50 ms. 조작 시 리셋 확인.
 - Slide 이미지 로드 실패 시 500 ms 내 그라디언트 폴백 렌더(스크린샷 검증).
 - ArtistShelf 12장 초과 곡 데이터에서 상위 12명만 노출(테스트 fixture 로 검증).
+- ArtistShelf 드래그 정렬: 아바타 A 를 C 위치로 drop → 화면 순서가 즉시 바뀌고, `user_preferences.artist_order` 가 동일 배열로 upsert 된다(네트워크 탭 1회). 새로고침 후에도 순서 유지.
+- 드래그 후 발생하는 `onClick` 이 필터를 트리거하지 않는다(드롭 1회당 `onArtistClick` 호출 0회).
+- 비로그인 상태에서 드래그해도 콘솔 에러·요청 0건(정렬은 화면에만 반영).
+- `artist_order` 에 없는 신규 아티스트는 목록 끝에 배치된다(fixture 검증).
 - EmotionShelf 12개, TeachingShelf 17개 카드 렌더 개수 완전 일치. 카피 스트링 100 % 일치.
 - ShelfArrows: 스크롤 위치가 좌/우 끝일 때 해당 화살표 `disabled` 속성 = true. ResizeObserver 언마운트 후 leak 0.
 - MiniSongCard 호버 오버레이 opacity transition ≤ 250 ms.
