@@ -1,9 +1,9 @@
 # thesis-prompts
 
-论文附录「프롬프트 재현 자료 (Prompt Reproduction Appendix)」镜像仓库。
+논문 부록 「프롬프트 재현 자료 (Prompt Reproduction Appendix)」의 읽기 전용 미러 저장소입니다.
 
-本仓库由主仓库 [yuuisohe-ui/sino-song-learn](https://github.com/yuuisohe-ui/sino-song-learn)
-的 `docs/thesis/appendix/prompts/` 目录通过 GitHub Actions 自动同步生成，**只读**。
+본 저장소는 원본 저장소(비공개)에서 GitHub Actions를 통해 자동 동기화됩니다.
 
-请勿在本仓库直接修改文件 —— 任何修改会在下一次同步时被覆盖。
-所有修改请在主仓库的 `docs/thesis/appendix/prompts/` 目录进行。
+- 동기화는 단방향입니다: 원본 저장소 → 본 미러 저장소.
+- 본 저장소에서 직접 수정한 내용은 다음 동기화 때 덮어써집니다. 수정은 원본 저장소에서만 하세요.
+- 파일과 논문 절의 대응은 [00-index-toc-mapping.md](00-index-toc-mapping.md)를 참조하세요.
