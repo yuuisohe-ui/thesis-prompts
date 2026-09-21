@@ -9,7 +9,7 @@
 ## 1. Identity — 이 프롬프트로 만드는 것
 
 **이름**: 강의안 AI 파이프라인 (Lesson-Plan AI Pipeline).
-**형태**: Supabase Edge Function `generate-lesson-plan` (Deno, `verify_jwt = false` 기본) + 클라이언트 `supabase.functions.invoke("generate-lesson-plan", { body: { action, ... } })`.
+**형태**: Supabase Edge Function `generate-lesson-plan` (Deno, config.toml 에 `verify_jwt = false` 명시 등록) + 클라이언트 `supabase.functions.invoke("generate-lesson-plan", { body: { action, ... } })`.
 **한 줄 정의**: 하나의 `lesson_plans` row 를 대상으로 **개요 → 주차 프레임(오리엔테이션 / 표준 / 시험 복습) → 부분 재생성 → 어시스턴트 대화**까지 모든 GPT 호출을 담당하는 **단일 액션 라우터 함수**.
 **모델**: `gpt-4o-mini` 고정, `tools` / `tool_choice` 기반 **구조화 JSON 반환** (자유 텍스트는 어시스턴트 액션에서만 사용).
 
@@ -165,7 +165,7 @@ function callOpenAI(apiKey, messages, tools?, toolChoice?) {
 
 ### 2.7 보안 · 배포
 
-- `verify_jwt = false` 기본값을 유지(플랫폼 표준). 함수 내부는 서비스 롤로 `lesson_plans / lesson_weeks / songs / song_analyses` 를 직접 읽고 쓴다.
+- `verify_jwt = false` 를 config.toml 에 명시 등록(플랫폼 표준). 함수 내부는 서비스 롤로 `lesson_plans / lesson_weeks / songs / song_analyses` 를 직접 읽고 쓴다.
 - `OPENAI_API_KEY` 는 Lovable Cloud 시크릿에서만 읽는다(클라이언트로 절대 노출 금지).
 - SQL 은 항상 파라미터 바인딩된 supabase-js 체이닝만 사용. `execute_sql` 류 raw SQL 금지.
 

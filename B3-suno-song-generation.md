@@ -36,11 +36,11 @@
 
 | # | 파일 | 책임 | 외부 의존 | JWT |
 |---|---|---|---|---|
-| 1 | `sg-generate-lyrics/index.ts` | 가사 + TITLE/STYLE_HINT/VIDEO_KEYWORDS 생성·파싱 | `OPENAI_API_KEY` | verify_jwt = false |
-| 2 | `sg-suno-generate/index.ts` | Suno 작곡 태스크 생성 → `taskId` 반환 | `SUNO_API_KEY`, `SUNO_API_KEY_2` | verify_jwt = false |
-| 3 | `sg-suno-poll/index.ts` | 단발 상태 조회 → 정규화된 status/track | 동상 | verify_jwt = false |
-| 4 | `sg-suno-lyrics/index.ts` | 단어 단위 정렬(alignedWords) + waveform | 동상 | verify_jwt = false |
-| 5 | `sg-pixabay-videos/index.ts` | 배경영상 후보 URL 목록(최대 20) | `PIXABAY_API_KEY` | verify_jwt = false |
+| 1 | `sg-generate-lyrics/index.ts` | 가사 + TITLE/STYLE_HINT/VIDEO_KEYWORDS 생성·파싱 | `OPENAI_API_KEY` | verify_jwt = true (기본, config 미등록) |
+| 2 | `sg-suno-generate/index.ts` | Suno 작곡 태스크 생성 → `taskId` 반환 | `SUNO_API_KEY`, `SUNO_API_KEY_2` | verify_jwt = true (기본, config 미등록) |
+| 3 | `sg-suno-poll/index.ts` | 단발 상태 조회 → 정규화된 status/track | 동상 | verify_jwt = true (기본, config 미등록) |
+| 4 | `sg-suno-lyrics/index.ts` | 단어 단위 정렬(alignedWords) + waveform | 동상 | verify_jwt = true (기본, config 미등록) |
+| 5 | `sg-pixabay-videos/index.ts` | 배경영상 후보 URL 목록(최대 20) | `PIXABAY_API_KEY` | verify_jwt = true (기본, config 미등록) |
 | 6 | `sg-finalize-song/index.ts` | 오디오 영속화 + `songs` insert + 후속 분석 기동 | Service Role, Storage | **JWT 필수(코드 내 검증)** |
 | 7 | `sg-repair-aligned/index.ts` | 과거 저장분의 원시 정렬 데이터 1회성 재병합·재분석 | Service Role | **JWT 필수(코드 내 검증)** |
 

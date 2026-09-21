@@ -145,7 +145,7 @@
 - **Suno API**: 두 개의 시크릿 `SUNO_API_KEY` 와 `SUNO_API_KEY_2` 를 순회. 상태 코드 401/402/429 또는 응답 body/msg 에 `credit|insufficient|quota|balance|unauthorized|invalid api key` 정규식 매치 시 다음 키로 페일오버. 두 키 모두 실패 시 크레딧 관련 오류는 한국어 문구 `Suno 크레딧이 부족합니다. 충전 후 다시 시도해 주세요` 로 변환.
 - **OpenAI 429** → `OpenAI 크레딧이 부족하거나 호출 한도 초과` 로 변환.
 - **CORS**: 모든 edge function 상단에 `corsHeaders` 상수 선언(§3.3 표준 상수). `OPTIONS` 는 즉시 200 반환.
-- **JWT 검증**: `sg-finalize-song` 은 `Authorization: Bearer` 필수(익명 저장 금지). `video-callback` 은 `VIDEO_CALLBACK_SECRET` 로 X-Callback-Secret 또는 Bearer 를 검증. 그 외 sg-* / video-trigger 는 사용자 세션에서 호출되므로 `verify_jwt = true` (기본).
+- **JWT 검증**: `sg-finalize-song` 은 `Authorization: Bearer` 필수(익명 저장 금지). `video-callback` 은 `VIDEO_CALLBACK_SECRET` 로 X-Callback-Secret 또는 Bearer 를 검증. 그 외 sg-* 함수는 `supabase/config.toml` 에 등록돼 있지 않아 기본값 `verify_jwt = true` (JWT 검증). `video-trigger` 는 config.toml 에 `verify_jwt = false` 로 명시 등록돼 있으며, 코드는 `Authorization` 헤더가 있을 때만 `owner_id` 를 기록하고 없으면 기록 없이 계속 실행한다.
 - **저장 페이로드 계약(엄격 13 필드)**: `sg-finalize-song` 호출 body 는 정확히 다음 13 개 키만 포함하며 `bgVideoList = []` 로 고정: `title, topic, audioUrl, lyricsText, alignedWords, waveformData, style, language, bgVideoList, videoKeywords, sunoTaskId, learnLanguage, youtubeUrl, youtubeVideoId`. (참고: `youtubeUrl` 이 비어 있어도 저장 진행 — 콜백 지연 시나리오)
 - **`learnLanguage` 결정**: `language === "한국어" ? "korean" : "chinese"` (이중언어는 학습 관점을 중국어로 취급).
 - **저장 성공 후**: `ensureCultureTags(newSongId)` fire-and-forget → toast → `onSaved?.(newSongId)` → `onOpenChange(false)` → 폼 상태 완전 초기화(모든 useState 리셋).
@@ -417,7 +417,8 @@ VIDEO_KEYWORDS: (영어 3개를 + 로 연결, 예: ocean+sunset+waves)
 
 - `sg-finalize-song` — `verify_jwt = true` (JWT 필수, `auth.getClaims` 로 `userId` 추출).
 - `video-callback` — `verify_jwt = false` + `VIDEO_CALLBACK_SECRET` 헤더 검증.
-- `sg-generate-lyrics` / `sg-suno-generate` / `sg-suno-poll` / `sg-suno-lyrics` / `video-trigger` — 세션 호출이므로 기본값 유지.
+- `sg-generate-lyrics` / `sg-suno-generate` / `sg-suno-poll` / `sg-suno-lyrics` — config.toml 미등록, 기본값(JWT 검증) 유지.
+- `video-trigger` — config.toml 에 `verify_jwt = false` 명시. `Authorization` 헤더가 없어도 실행되며, 있을 때만 `owner_id` 를 기록한다.
 
 **4-상태 렌더링(모든 스텝 Card 공통)**
 
