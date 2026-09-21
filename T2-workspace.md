@@ -281,7 +281,7 @@ src/components/workspace/
 
 - `courses`, `lesson_plans`: `owner_id IS NULL` (공용) 은 모두 SELECT 가능; `owner_id = auth.uid()` 는 CRUD 가능; `is_public = true` 는 공용 목록 노출용.
 - `course_members`: 학생은 자기 row 만, 교사는 자기가 소유한 `course_id` 에 속한 모든 row 를 SELECT.
-- `course_student_profiles`: 교사는 소유한 `course_id` 만 CRUD, 학생은 자기 `member_user_id` 프로필만 CRUD (P4 에서 완전 재현). `hidden_public_items`: `user_id = auth.uid()` 만.
+- `course_student_profiles`: 교사는 소유한 `course_id` 만 CRUD, 학생은 자기 `member_user_id` 프로필만 CRUD (T7 에서 완전 재현). `hidden_public_items`: `user_id = auth.uid()` 만.
 
 ---
 

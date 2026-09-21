@@ -105,7 +105,7 @@ import { SongCard } from "@/components/songs/SongCard";                         
   │           ├─ ActiveFilterTags                  ── P3g
   │           ├─ SongGrid (SongCard × ≤30 + pending skeletons) ── P3h
   │           └─ Pagination (< 1 … N > + [페이지로 이동])   ── 본 셸
-  ├─ <SongAnalysisDialog />                        ── P4(예정)
+  ├─ <SongAnalysisDialog />                        ── P3j
   ├─ <YouTubeSearchDialog />                       ── P3b 참조
   ├─ <YouTubeConfirmDialog />                      ── P3b 참조
   ├─ <CsvImportDialog />                           ── T2 참조

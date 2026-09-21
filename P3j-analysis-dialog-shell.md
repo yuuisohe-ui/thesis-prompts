@@ -27,7 +27,7 @@
 - `src/components/songs/SongAnalysisDialog.tsx` — 셸 · 헤더 도구모음 · 6-Tabs 프레임 · 인라인 가사 편집기 · 붙여넣기로 분석 UI · 재분석 progress 시뮬레이션.
 - `src/components/songs/SongFeatureButtons.tsx` — 2×2 4-기능 그리드 + 인라인 확장 패널 4종(`ArtistPanel`, `GuidePanel`, `RelatedPanel`, `CommentsPanel`) + `ComposerDialog`.
 - `src/components/songs/EmbedDialog.tsx` — **P3i 를 그대로 재사용**(본 문서에서는 재정의 금지, `import` 만 함).
-- Edge Functions: `generate-song-feature`(artist/guide 통합), `generate-song-comments`(초기 댓글 시드 + 사용자 append) — 존재를 전제로 호출만 정의, 구현은 P4d.
+- Edge Functions: `generate-song-feature`(artist/guide 통합), `generate-song-comments`(초기 댓글 시드 + 사용자 append) — 존재를 전제로 호출만 정의. `generate-song-feature` 의 구현은 B2, `generate-song-comments` 는 별도 프롬프트 문서 없음.
 
 ### 2.2 원자적 UI 규칙 (Lovable 실천 원칙 "Speak Atomic")
 

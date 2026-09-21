@@ -10,7 +10,7 @@
 > - `src/components/courses/home-blocks/types.ts` — 블록 타입 정의
 > - `src/App.tsx` — 라우트 두 줄 추가
 >
-> 블록 렌더러(`CourseHomeBlockRenderer`) / 인라인 에디터(`CourseHomeBlockEditorItem`) 는 **P5b**, 캘린더/자료/알림/우리 반 탭은 **P5c~P5e** 로 위임한다. `SemesterPicker`, `ClassTimePicker`, `lib/courseSchedule.ts` 는 본 프롬프트에서 인터페이스만 확정하고 상세 구현은 워크스페이스 다이얼로그 프롬프트(P4)와 공유한다.
+> 블록 렌더러(`CourseHomeBlockRenderer`) / 인라인 에디터(`CourseHomeBlockEditorItem`) 는 **P5b**, 캘린더/자료 탭은 **P5c**, 알림/우리 반 탭은 **P5d** 로 위임한다. `SemesterPicker`, `ClassTimePicker`, `lib/courseSchedule.ts` 는 본 프롬프트에서 인터페이스만 확정하고 상세 구현은 워크스페이스 다이얼로그 프롬프트(T5)와 공유한다.
 >
 > 본 프롬프트는 `00-template.md` 의 5-Section 골격을 따른다.
 
@@ -461,7 +461,7 @@ const pushHistory = (snap: CourseHomeBlockRow[]) => {
 ### 4.2 데이터 계약
 - `courses`: §2.2 컬럼. Hero 편집 결과는 `cover_image_url`, 일정 편집 결과는 `start_date`, 소유자만 UPDATE.
 - `course_home_blocks(id uuid, course_id uuid, created_by uuid null, block_type text, sort_order int, title text, content jsonb, created_at, updated_at)`. Realtime 활성. RLS: 소유자 CRUD + 학생 SELECT.
-- `course_student_profiles`: `(course_id, member_user_id)` 존재 여부만 확인. 스키마 관리는 P4/T3.
+- `course_student_profiles`: `(course_id, member_user_id)` 존재 여부만 확인. 스키마 관리는 T5/T3.
 - `course_members`: `(course_id, user_id, role)` upsert onConflict `course_id,user_id`.
 - `user_roles`: `(user_id, role)` — `teacher | admin` 판별.
 - `lesson_plans + lesson_weeks` — 프리필 소스. `lesson_weeks.song_ids uuid[]` 로 `songs` 조인.
@@ -473,7 +473,7 @@ const pushHistory = (snap: CourseHomeBlockRow[]) => {
 
 ### 4.3 이벤트 프로토콜
 - `window` 레벨 `CustomEvent("course-module-toolbar:add", { detail: { tab, type } })`.
-- HomeTab 은 `detail.tab === "home"` 만 처리. 다른 탭 리스너는 각각 P5c~P5e 내부에서 자체 등록·해제.
+- HomeTab 은 `detail.tab === "home"` 만 처리. 다른 탭 리스너는 각각 P5c·P5d 내부에서 자체 등록·해제.
 - `CourseModuleToolbar` 자체는 상태를 갖지 않음 — 순수 dispatcher.
 
 ### 4.4 Guide 훅
@@ -483,8 +483,8 @@ const pushHistory = (snap: CourseHomeBlockRow[]) => {
 - **P5b** — 블록 렌더러 & 인라인 에디터.
 - **P5c** — 캘린더 탭 (start_date + parseClassTime 소비).
 - **P5d** — 강의 자료 탭 + ConnectLessonPlanDialog(start_date).
-- **P5e** — 알림 탭 + 우리 반 탭.
-- **P4** — 워크스페이스 다이얼로그 (`CreateCourseDialog`, `EditCourseDialog`, `SemesterPicker`, `ClassTimePicker`).
+- **P5d** — 알림 탭 + 우리 반 탭.
+- **T5** — 워크스페이스 다이얼로그 (`CreateCourseDialog`, `EditCourseDialog`, `SemesterPicker`, `ClassTimePicker`).
 - **P3f / T-EDGE-PIXABAY** — `pixabay-search` edge function.
 
 ---
