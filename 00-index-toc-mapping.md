@@ -1,7 +1,8 @@
 # 00-index · 논문 목차 ↔ 프롬프트 문서 대응표
 
 > 본 문서는 학위논문 제4장의 절 번호와 본 부록의 프롬프트 재현 파일을 1:1로 연결한다.
-> 저장소 현황(총 50개 파일): 템플릿 1 · README 1 · 공용 P 계열 27 · 교사 T 계열 13 · 학생 S 계열 5 · 백엔드 B 계열 3.
+> 저장소 현황(총 51개 파일): 템플릿 1 · README 1 · 공용 P 계열 27 · 교사 T 계열 13 · 학생 S 계열 5 · 백엔드 B 계열 4.
+> 파일 번호(P·T·S·B)는 개발 과정에서 부여한 식별자이며 연속하지 않을 수 있다.
 
 ## 4.2 플랫폼 기능의 공통 설계 기반
 
@@ -64,7 +65,7 @@
 | `B1-song-import-and-transcript.md` | 곡 검색·가져오기·자막(가사) 확보 및 정규화 |
 | `B2-song-analysis-and-regeneration.md` | 분석·재생성(`analyze-song`, `bulk-reanalyze-batch` 등) |
 | `B3-suno-song-generation.md` | Suno 창작곡 생성 (4.2.4.5의 백엔드 짝) |
-| (미작성) | 배경영상 합성·비동기 콜백·계정 정리: `sg-pixabay-videos` · `pixabay-search` · `video-trigger` · `video-callback` · `delete-account` |
+| `B4-video-render-and-account-cleanup.md` | 배경영상 소재 조달(`sg-pixabay-videos`·`pixabay-search`) · 렌더링 위임과 콜백(`video-trigger`·`video-callback`) · 계정 정리(`delete-account`) |
 
 ### 4.2.8 반 상세페이지
 
@@ -98,24 +99,17 @@
 | 절 | 파일 | 비고 |
 |---|---|---|
 | 4.4.1 학생 인증 및 최초 진입 | `S2-student-auth-invite-onboarding.md` | |
-| 4.4.2 학생 홈 | `S1-student-home.md` | 초기 구상의 S3(내 공간)이 본 파일에 통합됨 |
+| 4.4.2 학생 홈 | `S1-student-home.md` | |
 | 4.4.3 반 상세페이지 학생 뷰어층 | `S4-student-course-detail.md` | |
 | 4.4.4 학생 설정·휴지통 | `S6-student-settings-and-trash.md` | |
 | 4.4.5 학생 사용 가이드 | `S7-student-guide.md` | |
 
-## 프롬프트 파일이 없는 절
+## 4.5 교사·학생 데이터 연동 메커니즘 (기존 파일 참조)
 
-| 절 | 상태 |
+4.5는 별도 프롬프트 파일 없이, 아래 기존 파일의 해당 절이 구현을 담당한다.
+
+| 절 | 참조 파일과 주요 절 |
 |---|---|
-| 4.5 교사·학생 데이터 연동 메커니즘 (4.5.1–4.5.3) | 프롬프트 문서 없음. `docs/thesis/05-collaboration-cases.md` 및 사례 증거 파일들이 대응 자료 |
-| 4.6 데이터 보안 및 콘텐츠 관리 체계 (4.6.1–4.6.2) | 프롬프트 문서 없음. RLS·GRANT 서술은 각 문서 ④4.3 데이터 계약 절에 분산 |
-| 4.2.7 중 배경영상·계정 정리 후단 | 미작성(위 4.2.7 표 참조) |
-
-## 결번 정리
-
-| 번호 | 처리 |
-|---|---|
-| S3 | `S1-student-home.md` 에 통합. 별도 파일 없음 |
-| S5 | 기획 단계에서만 존재(곡 학습). 실제 내용은 P3 계열이 담당하므로 미사용 결번 |
-| B4 | 미작성. 원 기획 범위는 배경영상 합성·콜백·계정 정리 |
-| P4·P7 | 재구성 과정에서 폐기된 구 번호. 각각 B2, P3c–P3e 로 흡수 |
+| 4.5.1 입반: 학생 조작에서 교사 가시화까지 | `S2-student-auth-invite-onboarding.md`(초대 링크 진입·온보딩·반 참여), `T5-course-basics-and-membership.md`(JoinCourseDialog), `S1-student-home.md`(내 수업), `T7-workspace-student-management.md`(반별 보기·명단 등록) |
+| 4.5.2 교육 콘텐츠 발행 | `T6-course-workspaces-teacher-edits.md`(캘린더·공지·자료), `T4-course-home-teacher-edits.md`(홈 블록 발행), `P5c-calendar-and-materials.md`, `P5b-home-blocks.md`, `P5d-notifications-and-community.md`, `S4-student-course-detail.md`(학생 수신측) |
+| 4.5.3 학습 피드백 회류 | `S1-student-home.md`(선생님께 메시지·공지 읽음), `P5d-notifications-and-community.md`(학생 게시물·답글 스레드·결석 신청), `S4-student-course-detail.md`(학생 게시물 리스트·답글), `T6-course-workspaces-teacher-edits.md`(교사 측 알림) |
