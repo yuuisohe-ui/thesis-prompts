@@ -41,7 +41,7 @@ Dialog（max-w-2xl），三个 Tab：
 1. **직접 업로드**：`<Input type="file" accept="image/*">`。
    - 目标 bucket：`course-home-assets`，路径 `${courseId}/hero-${Date.now()}.${ext}`，`upsert: true`。
    - 上传成功后取 `getPublicUrl`，再 `supabase.from("courses").update({ cover_image_url })`。
-2. **Pixabay 검색**：调用 edge function `pixabay-search`，body `{ keywords:[kw], lang:"ko", perKeyword:8, totalLimit:8 }`。返回 `assets[{id,url,thumb,user}]`，3 列缩略图 grid，点击即 `persist(url)`。悬浮层显示 `© user`。
+2. **Pixabay 검색**：调用 edge function `pixabay-search`，body `{ keywords:[kw], lang:"ko", perKeyword:8, totalLimit:8 }`。返回 `assets[{id,url,thumb,user}]`，3 列缩略图 grid，点击即 `persist(url)`。悬浮层显示 `© user`。(실제 함수는 perKeyword를 1~5로 제한하며, 결과 수는 totalLimit가 결정한다)
 3. **제거**：预览当前封面，`persist(null)` 恢复默认渐变。
 
 统一 `persist(url|null)`：更新 `courses.cover_image_url`，成功后 toast `표지가 업데이트되었습니다.`，调用父组件 `onChanged(url)` 就地同步 `course` state，关闭 Dialog。失败必须 toast `저장 실패` + error.message。

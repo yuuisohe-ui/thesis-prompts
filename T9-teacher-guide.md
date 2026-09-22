@@ -227,7 +227,7 @@ export const TEACHER_GUIDE_MODULES: GuideModule[] = [
       { id: "sg-3-compose",
         ko: { name: "③ Suno V4.5 작곡", usage: "비동기 호출 + 5초 폴링, 1~3분 소요, 새로고침에도 복구", output: "실재생 MP3" } },
       { id: "sg-4-video-save",
-        ko: { name: "④ 영상 매칭·아카이브 저장", usage: "video-trigger(GitHub Actions) 가 Pixabay 영상 매칭 → 「저장」 → 아카이브 등록 + 분석 자동", output: "신규 SongCard" } },
+        ko: { name: "④ 영상 매칭·아카이브 저장", usage: "영상 후보 선택은 sg-pixabay-videos 가, video-trigger 는 렌더 위임만 담당 → 「저장」 → 아카이브 등록 + 분석 자동", output: "신규 SongCard" } },
     ],
   },
   // 4. Lessons
@@ -337,7 +337,7 @@ final: 결과: 나만의 노래 아카이브 / 수집 → 분석 → 탐구 → 
 ① 「AI 맞춤 노래 생성 →」 버튼 / 이 버튼을 누르면 AI 노래 생성 다이얼로그가 열립니다. 별도 페이지 이동 없이 이 화면 위에서 모든 과정이 진행돼요.
 ② 참고 YouTube + 가사 생성 (≈ 5 초) / 다이얼로그에서 참고용 YouTube URL · 주제 · 언어 · 난이도를 입력하고 「가사 생성」을 누르면 GPT 가 가사를 만들어 줍니다. textarea 에서 자유롭게 편집 가능, 마음에 들지 않으면 재생성하세요.
 ③ Suno V4.5 작곡 (1~3 분) / 「작곡」 버튼을 누르면 Suno V4.5 가 비동기로 곡을 만들고 5 초마다 진행률을 폴링합니다. 브라우저를 새로고침해도 진행 상태가 그대로 복구되니, 안심하고 다른 작업을 해도 돼요.
-④ Pixabay 영상 자동 매칭 / 작곡이 끝나면 GitHub Actions 기반 video-trigger 가 가사·분위기에 어울리는 Pixabay 배경 영상을 자동으로 찾아 매칭합니다. 결과가 마음에 들 때까지 영상만 다시 고를 수도 있어요.
+④ Pixabay 영상 자동 매칭 / 작곡이 끝나면 sg-pixabay-videos 가 가사·분위기에 어울리는 Pixabay 배경 영상 후보를 찾아 보여 주고, video-trigger 는 렌더링만 위임받아 담당합니다. 결과가 마음에 들 때까지 영상만 다시 고를 수도 있어요.
 ⑤ 아카이브 저장 + 백그라운드 분석 / 「저장」 한 번이면 노래 아카이브에 SongCard 가 등록되고, 단어·문법·탐구 분석까지 백그라운드에서 자동 진행됩니다.
 final: 🎁 최종 결과 / 주제 한 줄 → 가사 + MP3 + 배경 영상 + 6 탭 분석까지 완비된 SongCard 한 장. 「지금 시작」을 누르면 다이얼로그를 바로 열 수 있어요.
 ```

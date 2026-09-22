@@ -282,7 +282,7 @@ list.map(b => <CourseHomeBlockRenderer block={b} course={course} ... />)
 
 - 저장 확정 `persist(url|null)`: `courses.update({ cover_image_url: url }).eq('id', courseId)` → toast `표지가 업데이트되었습니다.` → `onChanged(url)` → 닫기.
 - `upload`: `<Input type=file accept=image/*>` → `course-home-assets/${courseId}/hero-${Date.now()}.${ext}` 업로드(`upsert:true`) → `getPublicUrl` → `persist`.
-- `pixabay`: 키워드 → `supabase.functions.invoke("pixabay-search", { body: { keywords:[k], lang:"ko", perKeyword:8, totalLimit:8 } })`. 결과 `data.assets: {id,url,thumb,user}[]` 를 3열 그리드. 클릭 시 `persist(a.url)`. 빈 상태: `키워드로 검색해보세요.`.
+- `pixabay`: 키워드 → `supabase.functions.invoke("pixabay-search", { body: { keywords:[k], lang:"ko", perKeyword:8, totalLimit:8 } })`. 결과 `data.assets: {id,url,thumb,user}[]` 를 3열 그리드. 클릭 시 `persist(a.url)`. 빈 상태: `키워드로 검색해보세요.` (실제 함수는 perKeyword를 1~5로 제한하며, 결과 수는 totalLimit가 결정한다).
 - `remove`: 현재 이미지 미리보기 + `variant="destructive"` 버튼 `표지 제거` → `persist(null)`.
 - 하단 안내: `<Upload class="h-3 w-3" /> 이미지는 학생에게도 표시됩니다. 저작권을 확인하세요.`.
 
