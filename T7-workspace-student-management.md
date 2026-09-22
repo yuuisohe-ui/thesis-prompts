@@ -201,4 +201,4 @@ INSERT INTO course_student_profiles (
 - **P5c (calendar-and-materials)** : `LessonMaterialsTab` 등 반 상세 내부 탭을 설명한다. 학생 명단과 무관하다.
 - **P5d (notifications-and-community)** : 반 상세의 「우리 반」 탭에서 학생 카드 그리드를 렌더한다(`CommunityTab`). T7 의 「전체 학생」 표와는 목적이 다르다 — P5d 는 학생 페르소나 표현/편집, T7 은 교사가 여러 반을 가로질러 조망·등록.
 - **T6 (course-workspaces-teacher-edits)** : `CommunityTab` 편집 모드에서 교사가 개별 학생 카드를 직접 입력한다. 그 UI 는 학생 1명 단위 편집이지 CSV 대량 등록이 아니다. **CSV 일괄 등록/템플릿/파싱 파이프라인은 오직 T7 소유**.
-- **`src/pages/Students.tsx`** : 별도의 `/students` 페이지도 존재하나 현재 사이드바 라우팅에서 노출되는 진입점은 워크스페이스 섹션이 우선이며, 그 페이지는 동일 `BulkStudentDialog` + `course_student_profiles` 조회를 카드/표로 단순 렌더할 뿐이다. 재현 프롬프트는 T7 하나로 충분하다 (해당 페이지가 필요하면 이 문서 §5 파이프라인을 그대로 재사용).
+- **`src/pages/Students.tsx`** : `/students` 는 독립 페이지가 아니라 `/workspace#student-section` 으로 점프하는 리다이렉트 라우트다(App.tsx). 즉 학생 관리의 실제 진입점은 워크스페이스의 「학생 관리」 섹션이 유일하며, `Students.tsx` 자체는 라우트에 연결되지 않은 남는 코드다. 재현 프롬프트는 T7 하나로 충분하다.

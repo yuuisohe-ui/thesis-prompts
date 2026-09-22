@@ -119,7 +119,7 @@
 ### 4.1 프로젝트 맥락
 SPA 구조. 라우트는 3층으로 구분:
 - **공용**: `/`, `/auth`, `/onboarding`, `/shared/*`, `/embed/*`.
-- **교사**: `/dashboard`, `/workspace`, `/lessons/*`, `/courses/*`, `/students`, `/materials`, `/activity`, `/trash`.
+- **교사**: `/dashboard`, `/workspace`, `/song-generator`, `/materials`, `/activity`, `/trash`, `/guide`, `/settings`. 단, `/lessons`, `/courses`, `/students` 는 각각 `/workspace#lessons-section`, `/workspace#class-section`, `/workspace#student-section` 으로 점프하는 리다이렉트 라우트(독립 페이지 아님).
 - **학생**: `/student-home`, `/courses/:id`(뷰어), `/settings`.
 
 ### 4.2 Lovable Cloud 후경

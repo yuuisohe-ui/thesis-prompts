@@ -71,7 +71,7 @@
   | `file`                  | 카드 + `다운로드` 버튼(새 탭). `content.label || file_name`.                                            |
   | `lyrics`                | `song_analyses.lyrics_with_pinyin` 을 최대 6행 프리뷰. 원가사 · 병음 · 한국어 3줄.                       |
   | `quiz`                  | `quizPresets` 에서 매칭, `퀴즈 관리 열기` 버튼은 학생 노출 유지(권한은 라우팅 단에서 걸림).              |
-  | `students`              | 학생 수 표기 + `학생 관리` 버튼. 학생 클릭 시 `/students` 는 접근 권한 없음(라우팅 단에서 처리).         |
+  | `students`              | 학생 수 표기 + `학생 관리` 버튼. `/students` 는 `/workspace#student-section` 으로 점프하는 리다이렉트 라우트라서 학생에게는 의미 있는 진입점이 아니다(라우팅 단에서 처리).         |
   | `lesson_plan_overview`  | 연결된 강의안 카드 그리드.                                                                                |
   | `weekly_lessons`        | 선택 강의안의 8개 주차까지 나열, 오버플로우 안내 문구.                                                    |
   | `course_info`           | 총 기간 · 대상 · 학기 · 수업 시간 · 시작일(포맷 `YYYY년 M월 D일`).                                       |

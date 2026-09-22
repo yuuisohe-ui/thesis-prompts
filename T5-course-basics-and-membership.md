@@ -9,7 +9,7 @@
 ## 1 · Identity（模块身份）
 
 - **入口位置**：
-  - 侧边栏 `과정 관리` → `/courses`（`src/pages/Courses.tsx`）。
+  - 侧边栏 `과정 관리` → `/courses`，但该路由只是跳转到 `/workspace#class-section` 锚点的重定向（App.tsx）；`src/pages/Courses.tsx` 未连接任何路由，实际入口是 Workspace 的「내 반」区块。
   - Workspace 首屏 `내 반` 卡片列表 → 「새 반 만들기」按钮（`MyClassesSection.tsx`）。
   - 学生端：任意页面通过 `학생 홈` 上的「반 참여」按钮 → `JoinCourseDialog`。
 - **目的**：
