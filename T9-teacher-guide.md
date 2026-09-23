@@ -225,7 +225,7 @@ export const TEACHER_GUIDE_MODULES: GuideModule[] = [
       { id: "sg-2-lyrics",
         ko: { name: "② 참고곡 + 가사 생성", usage: "YouTube 참고 URL · 주제 · 언어 · 난이도 입력 → GPT 가 가사 자동 생성 후 편집", output: "편집 가능한 가사" } },
       { id: "sg-3-compose",
-        ko: { name: "③ Suno V4.5 작곡", usage: "비동기 호출 + 5초 폴링, 1~3분 소요, 새로고침에도 복구", output: "실재생 MP3" } },
+        ko: { name: "③ Suno V4.5 작곡", usage: "비동기 호출 + 5초 폴링, 평균 2-3분 소요, 새로고침에도 복구", output: "실재생 MP3" } },
       { id: "sg-4-video-save",
         ko: { name: "④ 영상 매칭·아카이브 저장", usage: "영상 후보 선택은 sg-pixabay-videos 가, video-trigger 는 렌더 위임만 담당 → 「저장」 → 아카이브 등록 + 분석 자동", output: "신규 SongCard" } },
     ],
@@ -322,7 +322,7 @@ export const TEACHER_GUIDE_MODULES: GuideModule[] = [
 
 **songs (7 step)** — anchors: `songs-add-url`, `songs-search`, `song-card`, modal×3, `final → [data-tour='songs-add-url']`. 원문:
 ```
-① URL 로 곡 추가 / 여기에 YouTube 링크를 붙여넣고 언어를 선택하면, 자막 추출과 AI 분석이 자동으로 진행됩니다. 약 30초 ~ 1분 소요.
+① URL 로 곡 추가 / 여기에 YouTube 링크를 붙여넣고 언어를 선택하면, 자막 추출과 AI 분석이 자동으로 진행됩니다. 약 1-2분 소요.
 ② YouTube 키워드 검색 / URL 이 없어도 키워드로 곡을 찾을 수 있어요. 결과 카드 클릭 → 언어 선택 → 자동 분석.
 ③ SongCard 액션 / 분석이 끝나면 이런 카드가 생겨요. ♥ 즐겨찾기 / ✏ 편집 / ↻ 재분석 / 🗑 삭제 / 🔗 공유 / 👁 분석 열기 — 곡 라이프사이클을 모두 처리합니다.
 ④ 분석 다이얼로그 — 6 탭 / 카드의 👁 을 누르면 영상 · 가사 · 단어 · 문법 · 읽기 · 탐구 6 개 탭이 열려요. 완전한 학습 자료가 한곳에.
