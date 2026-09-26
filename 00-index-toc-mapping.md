@@ -86,7 +86,7 @@
 | 4.3.2 교사 워크스페이스 | `T2-workspace.md` | |
 | 4.3.3 강의안 상세: 주차 레이아웃·편집 툴바 | `T3a-lesson-plan-detail.md` | |
 | 4.3.4 강의안 상세: AI 생성·생성 이력 | `T3b-lesson-plan-ai-pipeline.md` | |
-| 4.3.5 반 생성과 학생 입반 | `T5-course-basics-and-membership.md` | |
+| 4.3.5 반 생성과 학생 반 가입 | `T5-course-basics-and-membership.md` | |
 | 4.3.6 반 홈 교사 편집 증분 | `T4-course-home-teacher-edits.md` | |
 | 4.3.7 캘린더·공지·자료·우리 반 교사 작성층 | `T6-course-workspaces-teacher-edits.md` | |
 | 4.3.8 워크스페이스 학생 관리 섹션 | `T7-workspace-student-management.md` | |
@@ -110,6 +110,6 @@
 
 | 절 | 참조 파일과 주요 절 |
 |---|---|
-| 4.5.1 입반: 학생 조작에서 교사 가시화까지 | `S2-student-auth-invite-onboarding.md`(초대 링크 진입·온보딩·반 참여), `T5-course-basics-and-membership.md`(JoinCourseDialog), `S1-student-home.md`(내 수업), `T7-workspace-student-management.md`(반별 보기·명단 등록) |
+| 4.5.1 반 가입: 학생 조작에서 교사 가시화까지 | `S2-student-auth-invite-onboarding.md`(초대 링크 진입·온보딩·반 참여), `T5-course-basics-and-membership.md`(JoinCourseDialog), `S1-student-home.md`(내 수업), `T7-workspace-student-management.md`(반별 보기·명단 등록) |
 | 4.5.2 교육 콘텐츠 발행 | `T6-course-workspaces-teacher-edits.md`(캘린더·공지·자료), `T4-course-home-teacher-edits.md`(홈 블록 발행), `P5c-calendar-and-materials.md`, `P5b-home-blocks.md`, `P5d-notifications-and-community.md`, `S4-student-course-detail.md`(학생 수신측) |
 | 4.5.3 학습 피드백 회류 | `S1-student-home.md`(선생님께 메시지·공지 읽음), `P5d-notifications-and-community.md`(학생 게시물·답글 스레드·결석 신청), `S4-student-course-detail.md`(학생 게시물 리스트·답글), `T6-course-workspaces-teacher-edits.md`(교사 측 알림) |
