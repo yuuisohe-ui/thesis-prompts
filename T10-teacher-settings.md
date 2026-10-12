@@ -33,7 +33,7 @@
 - **상단 안내 배너**(수업 환경 탭 전용): `border-[#dbe0ee] bg-[#f4f6fb] text-[#2e3d6b] rounded-md border px-4 py-3 text-[13px]`, 왼쪽에 `Info` 아이콘 4×4 lucide, 본문에 굵은 강조 1개(`<b>‘AI 강의안 생성’</b>`) 포함.
 - **아바타 업로드**: JPG/PNG/WEBP, 2MB 이하만 허용, `avatars` 버킷 경로 `${user.id}/avatar-${Date.now()}.${ext}`, 업로드 성공 시 `profiles.avatar_url` 갱신 + `refreshProfile()`.
 - **자기소개 AI 초안**: `Sparkles` 트리거 → `EEF2FF` 배경 인라인 폼(Textarea 2 rows + 취소/생성 버튼) → `supabase.functions.invoke("generate-bio", { body: { prompt, profile: { full_name, organization } } })` → 성공 시 `bio`에 채우고 폼 닫기.
-- **비밀번호 변경**: 현재 비밀번호 검증은 `signInWithPassword` 재로그인 방식(별도 RPC 없이). 새 비밀번호 6자 미만/불일치 검사. 소셜 로그인 계정(`user.identities` 중 `provider === "email"` 없음) 감지 시 폼 자체를 안내 문구로 대체.
+- **비밀번호 변경**: 현재 비밀번호 검증은 `signInWithPassword` 재로그인 방식(별도 RPC 없이). 새 비밀번호 8자 미만/불일치 검사. 소셜 로그인 계정(`user.identities` 중 `provider === "email"` 없음) 감지 시 폼 자체를 안내 문구로 대체.
 
 ### 2.3 강제 제약
 
@@ -81,21 +81,21 @@
 | Class · 섹션 3 제목 | 기본 수업 언어 |
 | Class · 언어 옵션 | 한국어 · 중국어 |
 | Class · 저장 | 저장 / 저장 중... |
-| Class · 성공 토스트 | 저장되었습니다 |
+| Class · 성공 토스트 | 저장했어요 |
 | Security · 섹션 제목 | 비밀번호 변경 |
 | Security · OAuth 안내 | 소셜 로그인 계정은 비밀번호 변경이 지원되지 않습니다. |
 | Security · 필드 | 현재 비밀번호 · 새 비밀번호 · 새 비밀번호 확인 |
 | Security · 버튼 | 비밀번호 변경 / 변경 중... |
-| Security · 성공 | 비밀번호가 변경되었습니다 |
+| Security · 성공 | 비밀번호를 변경했어요 |
 | Security · 오류(현재PW) | 현재 비밀번호가 올바르지 않습니다 |
-| Security · 오류(길이) | 새 비밀번호는 6자 이상이어야 합니다 |
+| Security · 오류(길이) | 새 비밀번호는 8자 이상이어야 합니다 |
 | Security · 오류(불일치) | 새 비밀번호가 일치하지 않습니다 |
 | Security · Danger 제목 | 계정 탈퇴 |
 | Security · Danger 설명 | 계정을 탈퇴하면 모든 데이터(강의안, 학생 정보, 노래 아카이브)가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다. |
 | Security · Danger CTA | 계정 탈퇴 |
 | Security · 탈퇴 확인 제목 | 정말 탈퇴하시겠습니까? |
 | Security · 탈퇴 확인 버튼 | 탈퇴 확인 / 처리 중... |
-| Security · 탈퇴 성공 | 계정이 삭제되었습니다 |
+| Security · 탈퇴 성공 | 계정을 삭제했어요 |
 
 ### 3.2 파일·컴포넌트 트리 (Use Prompt Patterns for Layouts)
 
@@ -146,7 +146,7 @@ src/
   - **로딩**: skeleton (`h-8 w-32 bg-muted animate-pulse rounded` 등).
   - **빈 상태**: 미로그인 안내.
   - **에러**: `sonner` toast (destructive).
-  - **성공**: 「저장되었습니다」 / 「비밀번호가 변경되었습니다」 toast.
+  - **성공**: 「저장했어요」 / 「비밀번호를 변경했어요」 toast.
 - Realtime 없음(설정은 개인 스코프이므로 채널 불필요).
 
 ### 4.3 데이터 계약
@@ -194,7 +194,7 @@ src/
 - 「수업 환경」 탭의 「수업 시간」 pill 그룹 자식 버튼 수 = 3, 각각 label ∈ {`60분`, `90분`, `120분`}.
 - 저장 후 `supabase.from("user_preferences").select("class_durations").eq("user_id", auth.uid()).single()` 결과의 `class_durations` 배열 길이 ≤ 1. 초기 미선택 상태는 `[]`.
 - 「AI 강의안 생성」 다이얼로그를 세팅 저장 이후 최초로 열었을 때, `duration` 값이 세팅한 정수와 일치, `outputLang`이 세팅한 언어와 일치.
-- 비밀번호 6자 미만/불일치/현재 PW 오류 3-케이스가 각각 정확히 §3.1의 문자열을 toast로 출력.
+- 비밀번호 8자 미만/불일치/현재 PW 오류 3-케이스가 각각 정확히 §3.1의 문자열을 toast로 출력.
 - 소셜 로그인 전용 계정(`user.identities`에 `email` provider 없음)으로 로그인 시 `SecurityTab`의 비밀번호 폼 대신 정확히 「소셜 로그인 계정은 비밀번호 변경이 지원되지 않습니다.」 문구만 렌더.
 - Lighthouse 성능 ≥ 85, CLS ≤ 0.05, 설정 페이지 초기 데이터 로드 p95 ≤ 300 ms.
 - `<h1>` 노드 수 = 1 (「설정」만).

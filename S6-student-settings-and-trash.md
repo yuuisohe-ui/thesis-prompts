@@ -39,7 +39,7 @@
 - 아바타
   - `avatars` 스토리지 버킷 업로드 (경로 `${user.id}/avatar-${Date.now()}.${ext}`, `upsert: true`, `cacheControl: "3600"`).
   - 2MB 초과 시 「이미지는 2MB 이하여야 합니다」, MIME 이 `image/jpeg|png|jpg|webp` 가 아니면 「JPG, PNG 파일만 업로드 가능합니다」.
-  - 업로드 성공 시 `getPublicUrl` 결과로 `profiles.avatar_url` 갱신 → `refreshProfile()` → 「프로필 사진이 변경되었습니다」.
+  - 업로드 성공 시 `getPublicUrl` 결과로 `profiles.avatar_url` 갱신 → `refreshProfile()` → 「프로필 사진을 변경했어요」.
   - 버튼 라벨은 「사진 변경」/업로드 중 「업로드 중...」, 보조 문구 「JPG, PNG 최대 2MB」.
 - 편집 필드
   - 이름 (필수, 최대 50자) — 비어 있으면 「이름을 입력하세요」
@@ -51,14 +51,14 @@
   - 성별 라디오 `[남 / 여 / 기타]` (내부 값 `male/female/other`, 기본 `other`)
   - 이메일 (읽기 전용)
 - 값 정규화 헬퍼: `hskToBucket`, `topikToBucket`(DB 의 자유 문자열을 구간 라벨로 환원), `durationToYears`/`yearsToDuration`(연수 ↔ 한국어 라벨).
-- 저장 시 `hsk_level="없음"` / `topik_level="없음"` 은 `null` 로 저장, 학번·학과의 빈 문자열도 `null` 로 저장. 성공 시 「저장되었습니다」 + `refreshProfile()`.
+- 저장 시 `hsk_level="없음"` / `topik_level="없음"` 은 `null` 로 저장, 학번·학과의 빈 문자열도 `null` 로 저장. 성공 시 「저장했어요」 + `refreshProfile()`.
 
 #### 계정 & 보안 탭 — `SecurityTab`
 
 - **비밀번호 변경 카드**
   - 입력 3개: 현재 비밀번호 / 새 비밀번호 / 새 비밀번호 확인.
-  - 검증: 새 비밀번호 6자 이상(「새 비밀번호는 6자 이상이어야 합니다」), 두 입력 일치(「새 비밀번호가 일치하지 않습니다」).
-  - 절차: `supabase.auth.signInWithPassword({ email, password: cur })` 로 현재 비밀번호를 재확인(실패 시 「현재 비밀번호가 올바르지 않습니다」) → `supabase.auth.updateUser({ password })` → 「비밀번호가 변경되었습니다」 후 입력 초기화.
+  - 검증: 새 비밀번호 8자 이상(「새 비밀번호는 8자 이상이어야 합니다」), 두 입력 일치(「새 비밀번호가 일치하지 않습니다」).
+  - 절차: `supabase.auth.signInWithPassword({ email, password: cur })` 로 현재 비밀번호를 재확인(실패 시 「현재 비밀번호가 올바르지 않습니다」) → `supabase.auth.updateUser({ password })` → 「비밀번호를 변경했어요」 후 입력 초기화.
   - `isOAuthOnly`(= `user.identities` 에 `provider === "email"` 이 없음)인 경우 입력 폼 대신 「소셜 로그인 계정은 비밀번호 변경이 지원되지 않습니다.」 만 노출.
 - **계정 탈퇴(danger zone) 카드** — `bg-red-50 border-red-200`, 안내 「계정을 탈퇴하면 모든 데이터(강의안, 학생 정보, 노래 아카이브)가 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.」
   - `AlertDialog` 확인(제목 「정말 탈퇴하시겠습니까?」, 확인 버튼 「탈퇴 확인」) 후 `supabase.functions.invoke("delete-account")` → `signOut()` → `/` 이동.
